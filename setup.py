@@ -28,7 +28,7 @@ if VERSION_DEV:
     VERSION = VERSION + ".dev%d" % VERSION_DEV
 
 
-COMPILE_FLAGS = ["-O3", "-ffast-math", "-std=c99"]
+COMPILE_FLAGS = ["-O2", "-std=c99"]
 # Cython breaks strict aliasing rules.
 COMPILE_FLAGS += ["-fno-strict-aliasing"]
 COMPILE_FLAGS += ["-fPIC"]
