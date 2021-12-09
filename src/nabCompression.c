@@ -192,15 +192,16 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 	if(rShift == -1)
 		return -1;
 	else{
-		int rShiftVal = 1<<rShift; 
+		int rShiftVal = (1<<rShift)-1;
 		int giveup = 8;
 		short q,r,sign;
 		for(int i = 0; i < np; i++){
 			//calculation quotient, remainder, and sign of the input values
 			short orig = waveIn[i];
 			sign = orig >=0;
-			q = abs(orig)>>rShift;
-			r = abs(orig)&rShiftVal;
+			orig = abs(orig);
+			q = orig>>rShift;
+			r = orig&rShiftVal;
 			int locshift = 0;
 			if( q < giveup){
 				//deal with quotient
@@ -252,21 +253,19 @@ int readWholeCompressedByteString(void *inputBuffer, short *outputBuffer, superi
 	short filterLength;
 	buffer16 = (short*)(buffer+loc);	
 	filterLength = buffer16[0];
-	short *buffShort = (short*)(buffer+loc);
 	loc += 2;
 	short *filter = (short*)malloc(sizeof(short) * filterLength);
 	for(int f = 0; f < filterLength; f++){
-		filter[f] = buffShort[f];
+		filter[f] = buffer16[f+1];
 		loc += 2;
-	}
-	short M = buffShort[1 + filterLength];
+	}	
+	short M = buffer16[1 + filterLength];
 	loc += 2;
 	//the outputBuffer has been allocated at this point
 	//now iterate through the compressed data
 	short *tempShortBuffer = (short*)malloc(wavelength * sizeof(short));
 	superint outputloc = 0;
 	int compressedLength;
-	
 	int *intBuf = (int*)(buffer+loc);
 	unsigned int *uIntBuf = (unsigned int*)(buffer+loc);
 	superint intloc = 0;
@@ -274,12 +273,12 @@ int readWholeCompressedByteString(void *inputBuffer, short *outputBuffer, superi
 		compressedLength = intBuf[intloc];
 		intloc +=1;
 		//first figure out how long this compressed section is
-		decompressWithRiceCoding(&uIntBuf[intloc], &outputBuffer[outputloc], wavelength, compressedLength, M);	
-		decodeWaveform(&outputBuffer[outputloc], tempShortBuffer, compressedLength, filter, filterLength);
+		decompressWithRiceCoding(&uIntBuf[intloc], tempShortBuffer, wavelength, compressedLength, M);
+		decodeWaveform(tempShortBuffer, &outputBuffer[outputloc], wavelength, filter, filterLength);
 		outputloc += wavelength;
 		intloc += compressedLength;
 	}
-	//free(tempShortBuffer);	
+	free(tempShortBuffer);	
 	return 0;
 }
 
@@ -345,11 +344,8 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 	unsigned int *outBufUInt = (unsigned int *)(outputBuffer+loc);
 	int *outBufInt = (int*)(outputBuffer+loc);
 	superint intloc = 0;
-	printf("wavelength = %d\n", wavelength);
 	for(int i = 0; i < numWaves; i++){//iterate over each waveform now
 		encodeWaveform(&inputWaveforms[i*wavelength], tempEncodedBuffer, wavelength, filter, filterLength);//encode the waveform
-		for(int j = 0; j < wavelength; j++)
-			printf("%d %d \n", j, tempEncodedBuffer[j]);
 		int compressedSize = compressWithRiceCoding(tempEncodedBuffer, &outBufUInt[1+intloc], wavelength, M);//output shifted over by 1
 		if(compressedSize == -1){
 			fprintf(stderr, "Waveform compression failed.\n");
