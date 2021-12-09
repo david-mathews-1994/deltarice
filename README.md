@@ -59,26 +59,6 @@ This example is similar to the Python example. We create a dataset, compress it 
 ### Raw Code
 
 ```
-/************************************************************
-
-  Use
-       h5cc h5ex_d_bzip2.c H5Zbzip2.c -lbz2 
-  command to compile this example.
-
-  This example shows how to read and write data to a dataset
-  using bzip2 compression available in the H5Zbzip2.c file that
-  accompanies this example.  
-  The program first registers bzip2 compression  with the library,
-  and then checks if bzip2 compression is available.
-  After that it writes integers to a dataset using bzip2,
-  then closes the file.  Next, it reopens the file, reads
-  back the data, and outputs the type of compression and the
-  maximum value in the dataset to the screen.
-
-  This file is intended for use with HDF5 Library version 1.8
-
- ************************************************************/
-
 #include "hdf5.h"
 #include <stdio.h>
 #include <stdlib.h>
