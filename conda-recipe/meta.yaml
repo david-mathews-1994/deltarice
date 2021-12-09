@@ -1,0 +1,27 @@
+package:
+    name: nabhdf5
+    version: 0.2.1
+source:
+    # git_url: https://github.com/NabExperiment/nabhdf5
+    # git_rev: 0.0.1
+    path: ..
+    patches:
+      - setup.py.patch
+
+requirements:
+    build:
+        - python
+        - setuptools
+        - cython
+        - numpy
+        - h5py
+        - hdf5
+    run:
+        - python
+        - numpy
+        - h5py
+        - cython
+
+about:
+    home: https://github.com/NabExperiment/nabhdf5
+    summary: "nab hdf5 compression library."
