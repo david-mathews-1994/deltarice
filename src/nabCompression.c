@@ -43,15 +43,12 @@ extern void encodeWaveform(short *input, short *output, int input_len, short * f
 	/* Go through and check if the filter is the special case or not */
 	if (checkIfDeltaFilter(filt, filt_len)){
 		//In this case we can do the far faster version of the delta encoding function
-		printf("delta filter found\n");
 		short lastVal = input[0];
 		output[0] = lastVal;
 		short thisVal = 0;
 		short temp = 0;
-		printf("input 0 = %d\n", input[0]);
 		for(int i = 1; i < input_len; i++){
 			thisVal = input[i];
-			printf("input %d = %d\n", i, thisVal);	
 			temp = thisVal - lastVal;
 			output[i] = temp;
 			lastVal = thisVal;
