@@ -29,7 +29,7 @@ import numpy as np
 
 f = h5py.File('testFile.h5', 'w')
 
-RiceParamter = 8 #must be positive power of 2 and >= 1
+RiceParameter = 8 #must be positive power of 2 and >= 1
 WaveformLength = 7000
 compression_opts = (RiceParameter, WaveformLength) #required input parameters
 dtype='int16' #THIS IS A MUST. DATA CANNOT BE ANY OTHER TYPE
