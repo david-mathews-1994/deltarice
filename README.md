@@ -24,7 +24,7 @@ This example goes through and creates a dataset using the custom Nab compression
 
 ```
 import h5py
-impot nabCompression.h5
+import nabCompression.h5
 import numpy as np
 
 f = h5py.File('testFile.h5', 'w')
@@ -81,23 +81,18 @@ int main (void){
     size_t          nelmts;
     unsigned int    flags,
                     filter_info;
-    const unsigned cd_values[2] = {8, 5};          /* bzip2 default level is 9 */
-    short             wdata[DIM0][DIM1],          /* Write buffer */
-                    rdata[DIM0][DIM1],          /* Read buffer */
-                    maxr, maxw,
+    const unsigned cd_values[2] = {8, 5};
+    short             wdata[DIM0][DIM1], 
+                    rdata[DIM0][DIM1], 
                     i, j;
 
     /* 
-       Register bzip2 filter with the library
+       Register nab filter filter with the library
      */
 
     status = nab_register_h5filter();
     /*
-     * Check if bzip2 compression is available and can be used for both
-     * compression and decompression.  Normally we do not perform error
-     * checking in these examples for the sake of clarity, but in this
-     * case we will make an exception because this filter is an
-     * optional part of the hdf5 library.
+    Check to see if the filter properly registered to the HDF5 Library
      */
     avail = H5Zfilter_avail(H5Z_FILTER_NAB);
     if (!avail) {
@@ -117,11 +112,6 @@ int main (void){
     for (i=0; i<DIM0; i++)
         for (j=0; j<DIM1; j++)
             wdata[i][j] = 0;
-    maxw = wdata[0][0];
-    for (i=0; i<DIM0; i++)
-        for (j=0; j<DIM1; j++)
-            if (maxw < wdata[i][j])
-                maxw = wdata[i][j];
 
     /*
      * Create a new file using the default properties.
@@ -151,21 +141,15 @@ int main (void){
     /*
      * Write the data to the dataset.
      */
-    printf("pre-writing\n");
     status = H5Dwrite (dset, H5T_NATIVE_SHORT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                 wdata[0]);
-    printf("post writing completed\n");
     /*
      * Close and release resources.
      */
     status = H5Pclose (dcpl);
-    printf("freed dcpl\n");
     status = H5Dclose (dset);
-    printf("freed dset\n");
     status = H5Sclose (space);
-    printf("freed space\n");
     status = H5Fclose (file);
-    printf("freed file\n");
 
 
     /*
@@ -175,7 +159,6 @@ int main (void){
     /*
      * Open file and dataset using the default properties.
      */
-    printf("writing file completed\n");
     file = H5Fopen (FILE, H5F_ACC_RDONLY, H5P_DEFAULT);
     dset = H5Dopen (file, DATASET, H5P_DEFAULT);
 
@@ -205,19 +188,18 @@ int main (void){
     status = H5Dread (dset, H5T_NATIVE_SHORT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                 rdata[0]);
     /*
-     * Find the maximum value in the dataset, to verify that it was
-     * read correctly.
+    Verify the data read in is the same as was written.
      */
     bool allMatch = true;
     for (i=0; i<DIM0; i++) {
         for (j=0; j<DIM1; j++)  {
             if(rdata[i][j] != wdata[i][j])
         	allMatch = false;
-	}
+	    }
     }
     /*
-     * Print the maximum value.
-     */
+    Print if it all matched
+    */
     printf("Do they all match? ");
     printf("%s\n", allMatch ? "true" : "false");
 
