@@ -25,10 +25,10 @@ size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
 			size_t *buf_size, void **buf);
 
 extern int determinePowerOf2(int M);
-extern bool checkIfDeltaFilter(short *filter, int filt_len);
-extern void encodeWaveform(short *input, short *output, int input_len, short * filt, int filt_len);
+extern bool checkIfDeltaFilter(int *filter, int filt_len);
+extern void encodeWaveform(short *input, short *output, int input_len, int * filt, int filt_len);
 
-extern bool checkIfDeltaFilter(short *filter, int filt_len){
+extern bool checkIfDeltaFilter(int *filter, int filt_len){
 	if(filt_len == 2){
 		if(filter[0] == 1 && filter[1] == -1)
 			return true;
@@ -39,7 +39,7 @@ extern bool checkIfDeltaFilter(short *filter, int filt_len){
 }
 
 
-extern void encodeWaveform(short *input, short *output, int input_len, short * filt, int filt_len){
+extern void encodeWaveform(short *input, short *output, int input_len, int * filt, int filt_len){
 	/* Go through and check if the filter is the special case or not */
 	if (checkIfDeltaFilter(filt, filt_len)){
 		//In this case we can do the far faster version of the delta encoding function
@@ -68,7 +68,7 @@ extern void encodeWaveform(short *input, short *output, int input_len, short * f
 	return;
 }
 
-extern void decodeWaveform(short *input, short *output, int input_len, short * filt, int filt_len){
+extern void decodeWaveform(short *input, short *output, int input_len, int * filt, int filt_len){
 	if (checkIfDeltaFilter(filt, filt_len)){
 		short lastVal = input[0];
 		output[0] = lastVal;
@@ -242,74 +242,97 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 	}
 }
 
+//this function goes through and parses the optional parameters that were given to the system
+//it figures out what the user meant when they passed these values in
+void parseCD_VALUES(size_t cd_nelmts, const unsigned int cd_values[], int *waveformLength, int *M, int *filterLen, int **filter){
+	if(cd_nelmts == 0){
+		//in this case, just do the defaults
+		*waveformLength = -1;	
+		*M = 8;
+		*filterLen = 2;
+		int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
+		tempfilter[0] = 1;
+		tempfilter[1] = -1;
+		*filter = tempfilter;
+	}
+	else if(cd_nelmts == 1){ //in this case, assume the first parameter passed is the tuning parameter
+		*M = (int)cd_values[0];
+		*waveformLength = -1;
+		*filterLen = 2;		
+		int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
+		tempfilter[0] = 1;
+		tempfilter[1] = -1;
+		*filter = tempfilter;
+	}
+	else if(cd_nelmts == 2){//first is the tuning parameter, second is the waveform length
+		*M = (int)cd_values[0];
+		*waveformLength = (int)cd_values[1];
+		*filterLen = 2;
+		int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
+		tempfilter[0] = 1;
+		tempfilter[1] = -1;
+		*filter = tempfilter;
+	}
+	else{
+		//in this case we passed something for the filter
+		*M = (int)cd_values[0];
+		*waveformLength = (int)cd_values[1];
+		*filterLen = (int)cd_values[2];
+		if(*filterLen > 0){
+			int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
+			for(int f = 0; f < *filterLen; f++){
+				tempfilter[f] = (int)cd_values[3+f];
+			}
+			*filter = tempfilter;
+		}
+		//can possibly be more stuff here for future functionality with specifying byte size of data
+	}
+}
+
 //this function goes through and does the actual decompression
 //it assumes another function has figured out the sizes of the stuff
-int readWholeCompressedByteString(void *inputBuffer, short *outputBuffer, superint numWaveforms, superint wavelength){
-	char *buffer = inputBuffer;
-	short *buffer16;
-	superint loc = 0;
-	loc += 16; //jump past the waveform length and number of waves information
-	//figure out the filter length and size information
-	short filterLength;
-	buffer16 = (short*)(buffer+loc);	
-	filterLength = buffer16[0];
-	loc += 2;
-	short *filter = (short*)malloc(sizeof(short) * filterLength);
-	for(int f = 0; f < filterLength; f++){
-		filter[f] = buffer16[f+1];
-		loc += 2;
-	}	
-	short M = buffer16[1 + filterLength];
-	loc += 2;
-	//the outputBuffer has been allocated at this point
-	//now iterate through the compressed data
+int readWholeCompressedByteString(void *inputBuffer, short **outputBuffer, size_t cd_nelmts, const unsigned int* cd_values, int nbytes){
+	int wavelength, M, filterLen;
+	int *filter;
+	parseCD_VALUES(cd_nelmts, cd_values, &wavelength, &M, &filterLen, &filter);
+	unsigned int *buffer = inputBuffer;
+	int totalNumberPoints = buffer[0];	
+	if(wavelength == -1)
+		wavelength = totalNumberPoints;
+	int numWaveforms = totalNumberPoints / abs(wavelength);
 	short *tempShortBuffer = (short*)malloc(wavelength * sizeof(short));
 	superint outputloc = 0;
 	int compressedLength;
-	int *intBuf = (int*)(buffer+loc);
-	unsigned int *uIntBuf = (unsigned int*)(buffer+loc);
-	superint intloc = 0;
-	for(unsigned int i = 0; i < numWaveforms; i++){
+	unsigned int *intBuf = (unsigned int*)buffer;
+	superint intloc = 1;
+	short *output = (short*)malloc(sizeof(short) * totalNumberPoints);
+	for(int i = 0; i < numWaveforms; i++){
 		compressedLength = intBuf[intloc];
 		intloc +=1;
 		//first figure out how long this compressed section is
-		decompressWithRiceCoding(&uIntBuf[intloc], tempShortBuffer, wavelength, compressedLength, M);
-		decodeWaveform(tempShortBuffer, &outputBuffer[outputloc], wavelength, filter, filterLength);
+		decompressWithRiceCoding(&buffer[intloc], tempShortBuffer, wavelength, compressedLength, M);
+		decodeWaveform(tempShortBuffer, &output[outputloc], wavelength, filter, filterLen);
 		outputloc += wavelength;
 		intloc += compressedLength;
 	}
-	free(tempShortBuffer);	
-	return 0;
+	free(tempShortBuffer);
+	*outputBuffer = output;	
+	return totalNumberPoints;
 }
 
 int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_values[], size_t nbytes, size_t *buf_size, void **buf){
 	//first verify the inputs actually make sense
 	//first need to parse the input parameters to determine how to write the data
-	if(cd_nelmts < 2){
-		fprintf(stderr, "Improper number of options passed to filter creation. \n This code requires M, waveform length, and if applicable a custom filter for encoding.\n Input number of elements must be >=2 \n Received %ld \n", cd_nelmts);
-		return -1;	
-	}
-	int M = (int)cd_values[0];
-	int wavelength = (int)cd_values[1];
-	//now check if there is a filter or not
-	int filterLength = cd_nelmts - 2;
-	short *filter;
-	if(filterLength == 0){
-		filterLength = 2;
-		filter = (short*)malloc(sizeof(short)*filterLength);
-		filter[0] = 1;
-		filter[1] = -1;
-	}
-	else{
-		filter = (short*)malloc(sizeof(short)*filterLength);
-		for(int i = 0; i < filterLength; i++){
-			filter[i] = (short)cd_values[2+i];	
-		}
-	}	
-	//now with the filter parsed and the M and wavelength parameters known, we can do the stuff
-	//make sure the waveform format makes sense
-	if(nbytes % 2 == 0){
-		if ((int)(nbytes / 2) % wavelength != 0){
+	int M, wavelength, filterLen;
+	int *filter;
+	parseCD_VALUES(cd_nelmts, cd_values, &wavelength, &M, &filterLen, &filter);
+	int totalNumber = nbytes / 2; //total number of data points to unpack
+	//if the waveform length is set to -1, then treat it all as one big ol batch
+	if(wavelength == -1){
+		wavelength = totalNumber;
+	}		
+	else if(nbytes % 2 == 0){
+		if((int)(nbytes / 2) % wavelength != 0){
 			fprintf(stderr, "Wavelength doesn't divide evenly with size of dataset: %ld / %d has != remainder\n", nbytes/2, wavelength);
 			//free(filter);
 			return -1;
@@ -320,44 +343,28 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		//free(filter);
 		return -1;
 	}
-	int numWaves = (nbytes/2)/wavelength;
+	int numWaves = totalNumber/wavelength;
 	//now the compression can actually start
-	//set up the output buffer, assume the compression doesn't expand the data
-	char *outputBuffer = (char*)malloc(nbytes*2);
-	superint loc = 0;
-	superint* bit64buf = (superint*)outputBuffer;
-	bit64buf[0] = numWaves;
-	bit64buf[1] = wavelength;
-	loc+=16;
-	short *shortBuffer = (short*)(outputBuffer+loc);
-	shortBuffer[0] = (short)filterLength;
-	loc+=2;
-	for(int i = 0; i < filterLength; i++){
-		shortBuffer[i+1] = (short)filter[i];	
-	}
-	loc+=filterLength * 2;
-	shortBuffer[1+filterLength] = (short)M;
-	loc+=2;
+	//set up the output buffer, assume the compression doesn't expand the beyond 2 times the initial size
+	unsigned int *outputBuffer = (unsigned int*)malloc(nbytes * 2 + 1); //with an additional value for the length of data being output
+	//first write the total number of waveforms to the file
+	outputBuffer[0] = (unsigned int)totalNumber;
 	short *inputWaveforms = (short*)(*buf);
 	short *tempEncodedBuffer = (short*)malloc(sizeof(short) * wavelength);
-	
-	unsigned int *outBufUInt = (unsigned int *)(outputBuffer+loc);
-	int *outBufInt = (int*)(outputBuffer+loc);
-	superint intloc = 0;
+	superint intloc = 1;
 	for(int i = 0; i < numWaves; i++){//iterate over each waveform now
-		encodeWaveform(&inputWaveforms[i*wavelength], tempEncodedBuffer, wavelength, filter, filterLength);//encode the waveform
-		int compressedSize = compressWithRiceCoding(tempEncodedBuffer, &outBufUInt[1+intloc], wavelength, M);//output shifted over by 1
+		encodeWaveform(&inputWaveforms[i*wavelength], tempEncodedBuffer, wavelength, filter, filterLen);//encode the waveform
+		int compressedSize = compressWithRiceCoding(tempEncodedBuffer, &outputBuffer[1+intloc], wavelength, M);//output shifted over by 1
 		if(compressedSize == -1){
 			fprintf(stderr, "Waveform compression failed.\n");
 			//free(tempEncodedBuffer);
 			//free(filter);
 			return -1;
 		}	
-		outBufInt[intloc] = compressedSize; //the compressed data size
+		outputBuffer[intloc] = compressedSize; //the compressed data size
 		intloc += 1 + compressedSize;
 	}
-	loc += 4 * intloc;
-	*buf_size = loc;
+	*buf_size = 4 * intloc;
 	//free(buf);
 	*buf = outputBuffer;
 	//free(tempEncodedBuffer);
@@ -365,28 +372,24 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 	return 0;	
 }
 
+
 size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
 			const unsigned int cd_values[], size_t nbytes,
 			size_t *buf_size, void **buf)
 {
 	if (flags & H5Z_FLAG_REVERSE){ // Decompress the data
-		//in the case of decoding, first need to understand the output sizes and whatnot		
-		//get that information first
-		//first figure out how many waveforms and how long each one is
-		superint *tempBuf = (superint*)(*buf);
-		superint numWaves, wavelength;
-		numWaves = tempBuf[0];
-		wavelength = tempBuf[1];
+		//parse the optional parameters
 		//now get the filter information
-		short *outputBuffer = (short*)malloc(sizeof(short)*numWaves*wavelength);	
-		int result = readWholeCompressedByteString(*buf, outputBuffer, numWaves, wavelength);
+		//the number of data points is the first thing stored in the output
+		void *outputBuffer;	
+		int result = readWholeCompressedByteString(*buf, &outputBuffer, cd_nelmts, cd_values, nbytes);
 		if(result == -1){
 			fprintf(stderr, "De-compression failed\n");
 			return -1;
 		}	
 		//free(*buf);	
 		*buf = outputBuffer;
-		return numWaves * wavelength;
+		return result;
 	}
 	else{ //compress the data
 		int result = writeWholeCompressedByteString(cd_nelmts, cd_values, nbytes, buf_size, buf);
