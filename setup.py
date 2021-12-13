@@ -260,11 +260,12 @@ class build_ext(build_ext_):
 
     def build_extensions(self):
         c = self.compiler.compiler_type
-
+        print('compiler = ', self.compiler)
+        print('compiler type = ', c)
         if self.omp not in ("0", "1", True, False):
             raise ValueError("Invalid omp argument. Mut be '0' or '1'.")
         self.omp = int(self.omp)
-
+        print('omp = ', self.omp)
         if self.omp:
             if not hasattr(self, "_printed_omp_message"):
                 self._printed_omp_message = True

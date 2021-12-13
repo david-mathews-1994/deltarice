@@ -316,6 +316,7 @@ int readWholeCompressedByteString(void *inputBuffer, short **outputBuffer, size_
 		intloc += compressedLength;
 	}
 	free(tempShortBuffer);
+	free(filter);
 	*outputBuffer = output;	
 	return totalNumberPoints;
 }
@@ -365,10 +366,11 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		intloc += 1 + compressedSize;
 	}
 	*buf_size = 4 * intloc;
-	//free(buf);
-	*buf = outputBuffer;
-	//free(tempEncodedBuffer);
-	//free(filter);
+	//now reallocate the size to be the proper output size
+	free(*buf);
+	*buf = realloc(outputBuffer, *buf_size);
+	free(tempEncodedBuffer);
+	free(filter);
 	return 0;	
 }
 
@@ -381,13 +383,13 @@ size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
 		//parse the optional parameters
 		//now get the filter information
 		//the number of data points is the first thing stored in the output
-		void *outputBuffer;	
+		short *outputBuffer;	
 		int result = readWholeCompressedByteString(*buf, &outputBuffer, cd_nelmts, cd_values, nbytes);
 		if(result == -1){
 			fprintf(stderr, "De-compression failed\n");
 			return -1;
 		}	
-		//free(*buf);	
+		free(*buf);	
 		*buf = outputBuffer;
 		return result;
 	}
