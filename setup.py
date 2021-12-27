@@ -51,9 +51,9 @@ else:
     OMP_DEFAULT = True
 
 FALLBACK_CONFIG = {
-    "include_dirs": [],
-    "library_dirs": [],
-    "libraries": [],
+    "include_dirs": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/include"],
+    "library_dirs": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/lib"],
+    "libraries": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/lib"],
     "extra_compile_args": [],
     "extra_link_args": [],
 }
