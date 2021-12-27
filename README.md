@@ -58,6 +58,8 @@ If you get an error about missing source files when building the extensions, try
 
 This example goes through and creates a dataset using the custom Nab compression algorithm, then re-opens the file and reads in the same dataset verifying it compressed and decompressed properly. It's important to note that when using h5py and the create_dataset function that the chunksize MUST be specified. This must be specified such that the length of each waveform is the same size as the smallest dimension in the chunk. For a waveform length of 7000, this means that the chunks must be configured as (Something, 7000). If this is not done, the code will return an error. 
 
+Note that with this particular example, the nabhdf5 library, in particular the nabCompression folder in the build directory, has been added to the system path allowing Python to include it.
+
 ```
 import h5py
 import nabCompression.h5
