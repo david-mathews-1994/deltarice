@@ -1,14 +1,16 @@
-# Nab HDF5
-This is the git repo for the Nab compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab-DAQ system. 
+# Delta-Rice
+This is the git repo for the Delta-Rice compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab Experiments Data Acquisition System: http://nab.phys.virginia.edu/
 
-NabHDF5 contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework. 
+Delta-Rice contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework. 
 
 We are still waiting on an official HDF5 filter number but are temporarily using 4020. 
 
-The Nab compression algorithm is based around work to be published. The idea is to reduce randomness in the waveforms by using the correlation between subsequent data samples from an analog signal. As each datapoint is inherently correlated, we can reduce the variation in the data stored through filtering such as the [Link](https://en.wikipedia.org/wiki/Delta_encoding). Through this encoding we can reduce the number of unique symbols per waveform that need to be recorded, or in other words, make the spread of values to be stored more compact and centralized around 0. At this stage the algorithm uses [Link](https://en.wikipedia.org/wiki/Golomb_coding), in particular the special case of Rice Coding, to compress the data. Rice coding was chosen as it is algorithmically simpler and allows for higher throughput. 
+The Delta-Rice compression algorithm is based around work to be published. The idea is to reduce randomness in the waveforms by using the correlation between subsequent data samples from an analog signal. As each datapoint is inherently correlated, we can reduce the variation in the data stored through filtering such as the [Link](https://en.wikipedia.org/wiki/Delta_encoding). Through this encoding we can reduce the number of unique symbols per waveform that need to be recorded, or in other words, make the spread of values to be stored more compact and centralized around 0. At this stage the algorithm uses [Link](https://en.wikipedia.org/wiki/Golomb_coding), in particular the special case of Rice Coding, to compress the data. Rice coding was chosen as it is algorithmically simpler and allows for higher throughput. 
+
+A significant portion of this code repository, in particular the code that does the installation of the library but not the compression algorithm itself, is based off of code found here: https://github.com/kiyo-masui/bitshuffle. 
 
 ## Installation instructions for Linux
-Installation requires Python 3.3+, HDF5 1.8.4 or later, HDF5 for python (h5py), Numpy, and Cython. NabHDF5 is linked against HDF5. To use the dynamically loaded HDF5 filter requires HDF5 1.8.11 or later. 
+Installation requires Python 3.3+, HDF5 1.8.4 or later, HDF5 for python (h5py), Numpy, and Cython. Delta-Rice is linked against HDF5. To use the dynamically loaded HDF5 filter requires HDF5 1.8.11 or later. 
 
 To install:
 
@@ -21,7 +23,7 @@ If you get an error about missing source files when building the extensions, try
 This has been tested and verified to work on Ubuntu 20.04 and WSL Ubuntu.
 
 ## Installation instructions for Windows
-Installation requires Python 3.3+, HDF5 1.8.4 or later, HDF5 for python (h5py), Numpy, and Cython. NabHDF5 is linked against HDF5. To use the dynamically loaded HDF5 filter requires HDF5 1.8.11 or later. 
+Installation requires Python 3.3+, HDF5 1.8.4 or later, HDF5 for python (h5py), Numpy, and Cython. Delta-Rice is linked against HDF5. To use the dynamically loaded HDF5 filter requires HDF5 1.8.11 or later. 
 
 To install you first need to install the HDF5 library through conda. I used anaconda prompt to do this whole process. 
 
@@ -58,7 +60,7 @@ If you get an error about missing source files when building the extensions, try
 
 This example goes through and creates a dataset using the custom Nab compression algorithm, then re-opens the file and reads in the same dataset verifying it compressed and decompressed properly. It's important to note that when using h5py and the create_dataset function that the chunksize MUST be specified. This must be specified such that the length of each waveform is the same size as the smallest dimension in the chunk. For a waveform length of 7000, this means that the chunks must be configured as (Something, 7000). If this is not done, the code will return an error. 
 
-Note that with this particular example, the nabhdf5 library, in particular the nabCompression folder in the build directory, has been added to the system path allowing Python to include it.
+Note that with this particular example the delta-rice library, in particular the nabCompression folder in the build directory, has been added to the system path allowing Python to include it.
 
 ```
 import h5py
@@ -92,7 +94,7 @@ print(np.array_equal(readIn, array))
 
 ## Example in C
 
-This example is similar to the Python example. We create a dataset, compress it with the custom Nab compression algorithm, then close the file. The code then re-opens the file, reads in the data, and verifies it compressed and decompressed properly. 
+This example is similar to the Python example. We create a dataset, compress it with the delta-rice compression algorithm, then close the file. The code then re-opens the file, reads in the data, and verifies it compressed and decompressed properly. 
 
 ### Raw Code
 
