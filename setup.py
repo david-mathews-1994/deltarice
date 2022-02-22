@@ -51,12 +51,24 @@ else:
     OMP_DEFAULT = True
 
 FALLBACK_CONFIG = {
+    "include_dirs": [],
+    "library_dirs": [],
+    "libraries": [],
+    "extra_compile_args": [],
+    "extra_link_args": [],
+}
+
+
+"""
+#Example Fallback Config
+FALLBACK_CONFIG = {
     "include_dirs": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/include"],
     "library_dirs": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/lib"],
     "libraries": ["C:/Users/David/anaconda3/pkgs/hdf5-1.12.0-h1756f20_0/Library/lib"],
     "extra_compile_args": [],
     "extra_link_args": [],
 }
+"""
 
 if "HDF5_DIR" in os.environ:
     FALLBACK_CONFIG["include_dirs"] += [os.environ["HDF5_DIR"] + "/include"]  # macports
@@ -119,13 +131,13 @@ def pkgconfig(*packages, **kw):
 
 
 h5filter = Extension(
-    "nabCompression.h5",
+    "deltaRice.h5",
     sources=[
         "src/h5.pyx",
-        "src/nabCompression.c",
+        "src/deltaRice.c",
     ],
     depends=[
-        "src/nabCompression.h",
+        "src/deltaRice.h",
     ],
     define_macros=MACROS + [("H5_USE_18_API", None)],
     **pkgconfig("hdf5", config=dict(include_dirs=[]))
@@ -136,13 +148,13 @@ if not sys.platform.startswith("win"):
     h5filter.libraries.remove("hdf5")
 
 filter_plugin = Extension(
-    "nabCompression.plugin.libh5nabcompression",
+    "deltaRice.plugin.libh5deltarice",
     sources=[
-        "src/nabCompression.c",
-        "src/nab_h5plugin.c",
+        "src/deltaRice.c",
+        "src/deltarice_h5plugin.c",
     ],
     depends=[
-        "src/nabCompression.h",
+        "src/deltaRice.h",
     ],
     define_macros=MACROS,
     **pkgconfig("hdf5", config=dict(include_dirs=[]))
@@ -315,7 +327,7 @@ with open("requirements.txt") as f:
 
 # TODO hdf5 support should be an "extra". Figure out how to set this up.
 setup(
-    name="nabCompression",
+    name="deltaRice",
     version=VERSION,
     packages=[],
     scripts=[],
@@ -332,6 +344,6 @@ setup(
     #long_description=long_description,
     license="MIT",
     url="TBD",
-    #download_url=("https://github.com/kiyo-masui/bitshuffle/tarball/%s" % VERSION),
+    #download_url=("https://gitlab.com/dgma224/deltarice" % VERSION),
     keywords=["compression", "hdf5", "numpy"],
 )

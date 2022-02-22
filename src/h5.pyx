@@ -5,7 +5,7 @@ Mirror of the Bitshuffle file here: https://github.com/kiyo-masui/bitshuffle/blo
 
 Constants
 =========
-    H5FILTER : The Bitshuffle HDF5 filter integer identifier.
+    H5FILTER : The DELTARIC HDF5 filter integer identifier.
 Functions
 =========
     create_dataset
@@ -18,13 +18,13 @@ from h5py import h5d, h5fd, h5s, h5t, h5p, h5z, defs, filters
 
 cimport cython
 
-cdef extern from b"nabCompression.h":
-	int nab_register_h5filter()
-	int H5Z_FILTER_NAB
+cdef extern from b"deltaRice.h":
+	int deltarice_register_h5filter()
+	int H5Z_FILTER_DELTARICE
 
 
 
-H5FILTER = H5Z_FILTER_NAB
+H5FILTER = H5Z_FILTER_DELTARICE
 
 # Init HDF5 dynamic loading with HDF5 library used by h5py
 #only do this on NON-WINDOWS systems
@@ -53,9 +53,9 @@ IF UNAME_SYSNAME != "Windows":
 			raise RuntimeError("Failed to load all HDF5 symbols using these libs: {}".format(libs))
 
 def register_h5_filter():
-	ret = nab_register_h5filter()
+	ret = deltarice_register_h5filter()
 	if ret < 0:
-		raise RuntimeError("Failed to register bitshuffle HDF5 filter.", ret)
+		raise RuntimeError("Failed to register DeltaRice HDF5 filter.", ret)
 
 
 register_h5_filter()

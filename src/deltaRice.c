@@ -6,21 +6,21 @@
 #include <assert.h>
 #include <stdio.h>
 #include <hdf5.h>
-#include "nabCompression.h" //include the header file for this compression library
+#include "deltaRice.h" //include the header file for this compression library
 
 
-H5Z_class_t H5Z_NAB[1] = {{
+H5Z_class_t H5Z_DELTARICE[1] = {{
 	H5Z_CLASS_T_VERS, /* H5Z_class_t version */
-	(H5Z_filter_t)H5Z_FILTER_NAB, /*filter id number*/
+	(H5Z_filter_t)H5Z_FILTER_DELTARICE, /*filter id number*/
 	1, /*encoder present flag (set to true)*/
 	1, /*decoder present flag (set to true)*/
-	"nab", /*filter name for debugging*/
+	"deltarice", /*filter name for debugging*/
 	NULL, /*the "can apply" callback */
 	NULL, /*the "set local" callback */
-	(H5Z_func_t)H5Z_filter_nab, /*the actual filter function */
+	(H5Z_func_t)H5Z_filter_deltarice, /*the actual filter function */
 }};
 
-size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
+size_t H5Z_filter_deltarice(unsigned int flags, size_t cd_nelmts,
 			const unsigned int cd_values[], size_t nbytes,
 			size_t *buf_size, void **buf);
 
@@ -375,7 +375,7 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 }
 
 
-size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
+size_t H5Z_filter_deltarice(unsigned int flags, size_t cd_nelmts,
 			const unsigned int cd_values[], size_t nbytes,
 			size_t *buf_size, void **buf)
 {
@@ -406,11 +406,11 @@ size_t H5Z_filter_nab(unsigned int flags, size_t cd_nelmts,
 
 
 //modeled this function off of bshuf_h5filter.c from the bitshuffle gitlab
-extern int nab_register_h5filter(void){
+extern int deltarice_register_h5filter(void){
 	int retval;
-	retval = H5Zregister(H5Z_NAB);
+	retval = H5Zregister(H5Z_DELTARICE);
 	if(retval<0){
-		fprintf(stderr, "nab_register_h5filter: can't register nab filter");
+		fprintf(stderr, "deltarice_register_h5filter: can't register deltarice filter");
 	}
 	return retval;
 }

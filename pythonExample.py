@@ -1,5 +1,5 @@
 import h5py
-import nabCompression.h5
+import deltaRice.h5
 import numpy as np
 
 RiceParameter=8
@@ -13,12 +13,12 @@ f = h5py.File('testFile.h5', 'w')
 '''
 dataset = f.create_dataset('data', 
 	fullsize, 
-	compression=nabCompression.h5.H5FILTER,
+	compression=deltaRice.h5.H5FILTER,
 	compression_opts=compression_opts,
 	dtype=dtype,
 	chunks=chunksize)
 '''
-dataset = f.create_dataset('data', fullsize, compression=nabCompression.h5.H5FILTER, dtype=dtype)
+dataset = f.create_dataset('data', fullsize, compression=deltaRice.h5.H5FILTER, dtype=dtype)
 array = np.random.normal(0, 10, size=fullsize).astype(dtype)
 dataset[:] = array
 f.close()
