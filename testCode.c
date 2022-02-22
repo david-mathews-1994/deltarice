@@ -28,7 +28,7 @@
 #define DIM1            5
 #define CHUNK0          5 
 #define CHUNK1          5
-#define H5Z_FILTER_NAB  4020
+#define H5Z_FILTER_DELTARICE  4020
 
 int main (void){
     hid_t           file, space, dset, dcpl;    /* Handles */
@@ -50,7 +50,7 @@ int main (void){
        Register bzip2 filter with the library
      */
 
-    status = nab_register_h5filter();
+    status = deltarice_register_h5filter();
     /*
      * Check if bzip2 compression is available and can be used for both
      * compression and decompression.  Normally we do not perform error
@@ -58,15 +58,15 @@ int main (void){
      * case we will make an exception because this filter is an
      * optional part of the hdf5 library.
      */
-    avail = H5Zfilter_avail(H5Z_FILTER_NAB);
+    avail = H5Zfilter_avail(H5Z_FILTER_DELTARICE);
     if (!avail) {
-        printf ("nab filter not available.\n");
+        printf ("deltarice filter not available.\n");
         return 1;
     }
-    status = H5Zget_filter_info (H5Z_FILTER_NAB, &filter_info);
+    status = H5Zget_filter_info (H5Z_FILTER_DELTARICE, &filter_info);
     if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
                 !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
-        printf ("nab filter not available for encoding and decoding.\n");
+        printf ("deltarice filter not available for encoding and decoding.\n");
         return 1;
     }
 
@@ -98,7 +98,7 @@ int main (void){
      * compression filter and set the chunk size.
      */
     dcpl = H5Pcreate (H5P_DATASET_CREATE);
-    status = H5Pset_filter (dcpl, H5Z_FILTER_NAB, H5Z_FLAG_MANDATORY, (size_t)2, cd_values);
+    status = H5Pset_filter (dcpl, H5Z_FILTER_DELTARICE, H5Z_FLAG_MANDATORY, (size_t)2, cd_values);
     status = H5Pset_chunk (dcpl, 2, chunk);
 
     /*
@@ -151,11 +151,11 @@ int main (void){
     filter_type = H5Pget_filter (dcpl, 0, &flags, &nelmts, NULL, 0, NULL,
                 &filter_info);
     switch (filter_type) {
-        case H5Z_FILTER_NAB:
-            printf ("H5Z_FILTER_NAB\n");
+        case H5Z_FILTER_DELTARICE:
+            printf ("H5Z_FILTER_DELTARICE\n");
             break;
         default:
-            printf ("Not NAB as expected\n");
+            printf ("Not DeltaRice as expected\n");
     }
 
     /*
