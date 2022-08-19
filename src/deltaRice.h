@@ -4,7 +4,7 @@
 #define H5Z_class_t_vers 2
 #include "hdf5.h"
 
-#define H5Z_FILTER_DELTARICE 4020 //placehold number, not the final value
+#define H5Z_FILTER_DELTARICE 32025 //placehold number, not the final value
 typedef unsigned long long int superint;
 
 extern H5Z_class_t H5Z_DELTARICE[1];
