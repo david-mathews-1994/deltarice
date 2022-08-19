@@ -1,9 +1,7 @@
 # Delta-Rice
 This is the git repo for the Delta-Rice compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab Experiments Data Acquisition System: http://nab.phys.virginia.edu/
 
-Delta-Rice contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework. 
-
-We are still waiting on an official HDF5 filter number but are temporarily using 4020. 
+Delta-Rice contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework and uses filter ID 32025.
 
 The Delta-Rice compression algorithm is based around work to be published. The idea is to reduce randomness in the waveforms by using the correlation between subsequent data samples from an analog signal. As each datapoint is inherently correlated, we can reduce the variation in the data stored through filtering such as the [Link](https://en.wikipedia.org/wiki/Delta_encoding). Through this encoding we can reduce the number of unique symbols per waveform that need to be recorded, or in other words, make the spread of values to be stored more compact and centralized around 0. At this stage the algorithm uses [Link](https://en.wikipedia.org/wiki/Golomb_coding), in particular the special case of Rice Coding, to compress the data. Rice coding was chosen as it is algorithmically simpler and allows for higher throughput. 
 
