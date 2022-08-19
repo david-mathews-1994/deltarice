@@ -107,7 +107,7 @@ This example is similar to the Python example. We create a dataset, compress it 
 #define DIM1            5
 #define CHUNK0          5 
 #define CHUNK1          5
-#define H5Z_FILTER_NAB  4020
+#define H5Z_FILTER_NAB  32025
 
 int main (void){
     hid_t           file, space, dset, dcpl;    /* Handles */
