@@ -151,7 +151,7 @@ filter_plugin = Extension(
     "deltaRice.plugin.libh5deltarice",
     sources=[
         "src/deltaRice.c",
-        "src/deltarice_h5plugin.c",
+        "src/deltaRice_h5plugin.c",
     ],
     depends=[
         "src/deltaRice.h",
