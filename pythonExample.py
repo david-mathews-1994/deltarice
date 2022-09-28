@@ -1,13 +1,14 @@
 import h5py
 import deltaRice.h5
 import numpy as np
+import time
 
 RiceParameter=8
-WaveformLength=5
+WaveformLength=100000
 compression_opts = (RiceParameter, WaveformLength)
 dtype=np.int16
-fullsize = (100, 100, 100)
-chunksize = (10, 10, 10)
+fullsize = (1000, 1000, 1000)
+chunksize = (10, 1000, 1000)
 
 f = h5py.File('testFile.h5', 'w')
 '''
@@ -18,11 +19,17 @@ dataset = f.create_dataset('data',
 	dtype=dtype,
 	chunks=chunksize)
 '''
-dataset = f.create_dataset('data', fullsize, compression=deltaRice.h5.H5FILTER, dtype=dtype)
 array = np.random.normal(0, 10, size=fullsize).astype(dtype)
+start=time.time()
+dataset = f.create_dataset('data', fullsize, compression=deltaRice.h5.H5FILTER, dtype=dtype, chunks = chunksize, compression_opts = compression_opts)
 dataset[:] = array
 f.close()
-f = h5py.File('testFile.h5', 'r')
-dataset = f['data']
+print(time.time()-start)
 
-print(np.array_equal(dataset[()], array))
+f = h5py.File('testFile.h5', 'r')
+start = time.time()
+dataset = f['data'][()]
+print(time.time()-start)
+
+print(np.array_equal(dataset, array))
+
