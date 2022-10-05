@@ -140,7 +140,7 @@ int determinePowerOf2(int M){
 void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np, int compressedLength, int M){
 	superint read = 0;
 	int bit = 0;
-	int q,r,sign;
+	int q,r;
 	int bitloc = 0;
 	//load in the first buffer
 	read = compressedIn[0];
@@ -152,7 +152,7 @@ void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np
 		return;
 	else{
 		int rShiftVal = (1 << (rShift)) - 1;
-		short val = 0;
+		int val = 0; //have to cast as an integer to make this work nicely for large values
 		for(int i = 0; i < np; i++){
 			q = 0;
 			while(!getBit64(read,bit)){
@@ -162,18 +162,20 @@ void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np
 			bit++;
 			if(q == 8){ //this is the case when the quotient was too large
 				val = (read >> (48-bit))&65535; //48 because of 64 - 16, 65535 = 2**16 - 1
-				val = val - 32768;
 				bit += 16;
 			}
 			else{
 				//get the sign of the value now
-				sign = ((getBit64(read, bit)^1)<<1)-1;
-				bit++;
 				//now get the remainder
 				r = (read>>(64 - rShift - bit))&rShiftVal; //(read>>(64-rshift-bit))&rshifthigh;
 				bit += rShift; //rShift;
 				val = (q<<rShift)+r;
-				val = sign*val;
+			}
+			if((val&1)==0) //if an even number divide by 2
+				val = val>>1;
+			else{
+				val = val + 1; //if odd, add 1 and then divide by 2
+				val = -1*(val>>1);
 			}
 			waveOut[i] = val;
 			if(bit >= 32){//read in more to the buffer
@@ -201,12 +203,14 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 	else{
 		int rShiftVal = (1<<rShift)-1;
 		int giveup = 8;
-		short q,r,sign;
+		short q,r;
 		for(int i = 0; i < np; i++){
 			//calculation quotient, remainder, and sign of the input values
 			int orig = waveIn[i]; //cast to an integer temporarily for the absolute value operation
-			sign = orig >=0;
-			orig = abs(orig);
+			orig = orig<<1;
+			if(orig<0){ //if it's negative then make it the absolute value - 1
+				orig=abs(orig)-1;
+			}
 			q = orig>>rShift;
 			r = orig&rShiftVal;
 			int locshift = 0;
@@ -214,18 +218,14 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 				//deal with quotient
 				temp = (temp<<(q+1))|1;//shift to the left that many values + 1
 				locshift = q+1; //keep track of the current location
-				if (sign == 1)
-					temp=temp<<1;
-				else
-					temp = (temp<<1)|1;
 				//now handle the remainder
 				temp = (temp<<rShift)|r;
-				loc+= 1 + rShift + locshift;
+				loc+= rShift + locshift;
 			}
 			else{ //if the quotient is too large, do the giveup signal
 				temp = (temp << (giveup + 1))|1;
 				temp = temp << 16;
-				temp = temp|(waveIn[i]+32768);
+				temp = temp|orig;
 				loc+= giveup + 17;// 8 for 8 zeros, 1 for ending the 8 zeros, and then 8 for binary value
 			}
 			if(loc>=end){//if we have filled 32 bits worth of stuff up, write that to the output buffer
@@ -403,7 +403,6 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		// now do the openMP version of the compression/decompression
 		//define the various output buffers and whatnot
 		short *inputWaveforms = (short*)(*buf);
-		size_t totalSize = 0;
 		size_t maxBufferSize = nbytes * 2; //most they can be is twice the initial size if it completely fails cause giveup = 8 so 9 bits of fail + 16 bits of the original value < 32 total
 		unsigned int *outputBuffer = (unsigned int*)malloc(maxBufferSize+1*numWaves+1); //the whole output buffer, bonus 1 for the initial output values
 		short *tempEncodedBuffer = (short*)malloc(nbytes);
@@ -461,27 +460,20 @@ size_t H5Z_filter_deltarice(unsigned int flags, size_t cd_nelmts,
 {
 	
 	if (flags & H5Z_FLAG_REVERSE){ // Decompress the data
-		clock_t start = clock();
-		short *outputBuffer;
 		int result = readWholeCompressedByteString(cd_nelmts, cd_values, nbytes, buf_size, buf);
 		if(result == -1){
 			fprintf(stderr, "De-compression failed\n");
 			return -1;
 		}
-		clock_t end = clock();
-		float seconds = (float)(end-start)/CLOCKS_PER_SEC;
 		return *buf_size;
 	}
 	else{ //compress the data
-		clock_t start = clock();
 		int result = writeWholeCompressedByteString(cd_nelmts, cd_values, nbytes, buf_size, buf);
 		if(result == -1){
 			fprintf(stderr, "Compression failed\n");
 			//free(buf);
 			return -1;
 		}
-		clock_t end = clock();
-		float seconds = (float)(end-start)/CLOCKS_PER_SEC;
 		return *buf_size;
 	}
 }

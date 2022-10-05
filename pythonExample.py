@@ -4,11 +4,11 @@ import numpy as np
 import time
 
 RiceParameter=8
-WaveformLength=100000
+WaveformLength=10000
 compression_opts = (RiceParameter, WaveformLength)
 dtype=np.int16
 fullsize = (1000, 1000, 1000)
-chunksize = (10, 1000, 1000)
+chunksize = (1, 1000, 1000)
 
 f = h5py.File('testFile.h5', 'w')
 '''
@@ -30,7 +30,7 @@ f = h5py.File('testFile.h5', 'r')
 start = time.time()
 dataset = f['data'][()]
 print(time.time()-start)
-
+print(np.array_equal(dataset, array))
 print('testing uncompressed performance')
 
 f = h5py.File('testFile2.h5', 'w')
