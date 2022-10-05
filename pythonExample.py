@@ -4,11 +4,11 @@ import numpy as np
 import time
 
 RiceParameter=8
-WaveformLength=10000
+WaveformLength=100000
 compression_opts = (RiceParameter, WaveformLength)
 dtype=np.int16
 fullsize = (1000, 1000, 1000)
-chunksize = (1, 1000, 1000)
+chunksize = (10, 1000, 1000)
 
 f = h5py.File('testFile.h5', 'w')
 '''
