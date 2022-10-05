@@ -31,5 +31,19 @@ start = time.time()
 dataset = f['data'][()]
 print(time.time()-start)
 
+print('testing uncompressed performance')
+
+f = h5py.File('testFile2.h5', 'w')
+start=time.time()
+dataset = f.create_dataset('data', fullsize, dtype=dtype, chunks = chunksize)
+dataset[:] = array
+f.close()
+print(time.time()-start)
+
+f = h5py.File('testFile2.h5', 'r')
+start = time.time()
+dataset = f['data'][()]
+print(time.time()-start)
+
 print(np.array_equal(dataset, array))
 
