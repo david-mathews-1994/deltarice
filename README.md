@@ -1,4 +1,8 @@
 # Delta-Rice
+## IMPORTANT NOTE
+In a recent git commit the format of the compressed data was tweaked. Users should be aware that any data saved with the prior version can NOT be read by the new version and should be decompressed before upgrading their version of the library.
+
+## Main Information
 This is the git repo for the Delta-Rice compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab Experiments Data Acquisition System: http://nab.phys.virginia.edu/
 
 Delta-Rice contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework and uses filter ID 32025.
