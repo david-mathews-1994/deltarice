@@ -1,13 +1,30 @@
 //do all the includes that are standard based on the example
 #include <sys/types.h>
 #include <stdlib.h>
+<<<<<<< HEAD
+=======
+#include <time.h> //used for timing the performance
+>>>>>>> dev
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
 #include <hdf5.h>
+<<<<<<< HEAD
 #include "deltaRice.h" //include the header file for this compression library
 
+=======
+#include <threads.h>
+#include "deltaRice.h" //include the header file for this compression library
+
+//first thing to do is to determine if openmp was used or not in the compilation
+
+//define a variable to see if openMP was used or not
+
+#if defined(_OPENMP)
+	#include <omp.h>
+#endif
+>>>>>>> dev
 
 H5Z_class_t H5Z_DELTARICE[1] = {{
 	H5Z_CLASS_T_VERS, /* H5Z_class_t version */
@@ -131,21 +148,33 @@ int determinePowerOf2(int M){
 void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np, int compressedLength, int M){
 	superint read = 0;
 	int bit = 0;
+<<<<<<< HEAD
 	int q,r,sign;
 	int bitloc = 0;	
 
+=======
+	int q,r;
+	int bitloc = 0;
+>>>>>>> dev
 	//load in the first buffer
 	read = compressedIn[0];
 	read = read << 32;
 	read = read|(compressedIn[1]);
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
 	//set up the remainder shift values, assuming that m = 8
 	int rShift = determinePowerOf2(M);
 	if(rShift == -1)
 		return;
 	else{
 		int rShiftVal = (1 << (rShift)) - 1;
+<<<<<<< HEAD
 		short val = 0;
+=======
+		int val = 0; //have to cast as an integer to make this work nicely for large values
+>>>>>>> dev
 		for(int i = 0; i < np; i++){
 			q = 0;
 			while(!getBit64(read,bit)){
@@ -155,18 +184,33 @@ void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np
 			bit++;
 			if(q == 8){ //this is the case when the quotient was too large
 				val = (read >> (48-bit))&65535; //48 because of 64 - 16, 65535 = 2**16 - 1
+<<<<<<< HEAD
 				val = val - 32768;
+=======
+>>>>>>> dev
 				bit += 16;
 			}
 			else{
 				//get the sign of the value now
+<<<<<<< HEAD
 				sign = ((getBit64(read, bit)^1)<<1)-1;
 				bit++;
+=======
+>>>>>>> dev
 				//now get the remainder
 				r = (read>>(64 - rShift - bit))&rShiftVal; //(read>>(64-rshift-bit))&rshifthigh;
 				bit += rShift; //rShift;
 				val = (q<<rShift)+r;
+<<<<<<< HEAD
 				val = sign*val;
+=======
+			}
+			if((val&1)==0) //if an even number divide by 2
+				val = val>>1;
+			else{
+				val = val + 1; //if odd, add 1 and then divide by 2
+				val = -1*(val>>1);
+>>>>>>> dev
 			}
 			waveOut[i] = val;
 			if(bit >= 32){//read in more to the buffer
@@ -175,13 +219,21 @@ void decompressWithRiceCoding(unsigned int *compressedIn, short *waveOut, int np
 				read = compressedIn[bitloc];
 				read = read << 32;
 				if(bitloc != compressedLength - 1)
+<<<<<<< HEAD
 					read = read|compressedIn[bitloc + 1];				
+=======
+					read = read|compressedIn[bitloc + 1];
+>>>>>>> dev
 			}
 		}
 	}
 }
 
 int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, int M){
+<<<<<<< HEAD
+=======
+	//we assume that the size of the compressedOut container is np datapoints
+>>>>>>> dev
 	unsigned int print = 0;//the value that will be output
 	superint temp = 0;
 	int len = 0;
@@ -193,12 +245,23 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 	else{
 		int rShiftVal = (1<<rShift)-1;
 		int giveup = 8;
+<<<<<<< HEAD
 		short q,r,sign;
 		for(int i = 0; i < np; i++){
 			//calculation quotient, remainder, and sign of the input values
 			int orig = waveIn[i]; //cast to an integer temporarily for the absolute value operation
 			sign = orig >=0;
 			orig = abs(orig);
+=======
+		short q,r;
+		for(int i = 0; i < np; i++){
+			//calculation quotient, remainder, and sign of the input values
+			int orig = waveIn[i]; //cast to an integer temporarily for the absolute value operation
+			orig = orig<<1;
+			if(orig<0){ //if it's negative then make it the absolute value - 1
+				orig=abs(orig)-1;
+			}
+>>>>>>> dev
 			q = orig>>rShift;
 			r = orig&rShiftVal;
 			int locshift = 0;
@@ -206,6 +269,7 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 				//deal with quotient
 				temp = (temp<<(q+1))|1;//shift to the left that many values + 1
 				locshift = q+1; //keep track of the current location
+<<<<<<< HEAD
 				if (sign == 1)
 					temp=temp<<1;
 				else
@@ -213,10 +277,16 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 				//now handle the remainder
 				temp = (temp<<rShift)|r;
 				loc+= 1 + rShift + locshift;
+=======
+				//now handle the remainder
+				temp = (temp<<rShift)|r;
+				loc+= rShift + locshift;
+>>>>>>> dev
 			}
 			else{ //if the quotient is too large, do the giveup signal
 				temp = (temp << (giveup + 1))|1;
 				temp = temp << 16;
+<<<<<<< HEAD
 				temp = temp|(waveIn[i]+32768);
 				loc+= giveup + 17;// 8 for 8 zeros, 1 for ending the 8 zeros, and then 8 for binary value
 			}
@@ -228,6 +298,19 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 				len+=1;
 			}
 		}		
+=======
+				temp = temp|orig;
+				loc+= giveup + 17;// 8 for 8 zeros, 1 for ending the 8 zeros, and then 8 for binary value
+			}
+			if(loc>=end){//if we have filled 32 bits worth of stuff up, write that to the output buffer
+				print=temp >> (loc - end);
+				temp = temp&((1<<(loc-end))-1);
+				compressedOut[len] = print;
+				loc = loc - end;
+				len+=1;
+			}
+		}
+>>>>>>> dev
 		if(loc!=0){//if at the end we haven't freed the 32 bit buffer yet
 			print = temp<<(end - loc);
 			compressedOut[len] = print;
@@ -242,7 +325,11 @@ int compressWithRiceCoding(short *waveIn, unsigned int *compressedOut, int np, i
 void parseCD_VALUES(size_t cd_nelmts, const unsigned int cd_values[], int *waveformLength, int *M, int *filterLen, int **filter){
 	if(cd_nelmts == 0){
 		//in this case, just do the defaults
+<<<<<<< HEAD
 		*waveformLength = -1;	
+=======
+		*waveformLength = -1;
+>>>>>>> dev
 		*M = 8;
 		*filterLen = 2;
 		int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
@@ -253,7 +340,11 @@ void parseCD_VALUES(size_t cd_nelmts, const unsigned int cd_values[], int *wavef
 	else if(cd_nelmts == 1){ //in this case, assume the first parameter passed is the tuning parameter
 		*M = (int)cd_values[0];
 		*waveformLength = -1;
+<<<<<<< HEAD
 		*filterLen = 2;		
+=======
+		*filterLen = 2;
+>>>>>>> dev
 		int *tempfilter = (int*)malloc(sizeof(int) * *filterLen);
 		tempfilter[0] = 1;
 		tempfilter[1] = -1;
@@ -280,6 +371,7 @@ void parseCD_VALUES(size_t cd_nelmts, const unsigned int cd_values[], int *wavef
 			}
 			*filter = tempfilter;
 		}
+<<<<<<< HEAD
 		//can possibly be more stuff here for future functionality with specifying byte size of data
 	}
 }
@@ -314,6 +406,91 @@ int readWholeCompressedByteString(void *inputBuffer, short **outputBuffer, size_
 	free(filter);
 	*outputBuffer = output;	
 	return totalNumberPoints;
+=======
+		//can possibly be more stuff here for future functionality with specifying byte size of data and threading
+	}
+}
+
+void perWaveDecompression(short *outputBuffer, short *tempBuffer, unsigned int *inputBuffer, int wavelength, int *filter, int filterLen, int M){
+	int compressedLength = inputBuffer[0];
+	decompressWithRiceCoding(&inputBuffer[1], tempBuffer, wavelength, compressedLength, M);
+	decodeWaveform(tempBuffer, outputBuffer, wavelength, filter, filterLen);
+}
+
+//this function goes through and does the actual decompression
+//it assumes another function has figured out the sizes of the stuff
+int readWholeCompressedByteString(size_t cd_nelmts, const unsigned int* cd_values, int nbytes, size_t *buf_size, void **buf){
+	int wavelength, M, filterLen;
+	int *filter;
+	parseCD_VALUES(cd_nelmts, cd_values, &wavelength, &M, &filterLen, &filter);
+	unsigned int *intBuf = (unsigned int*)(*buf); //cast the data being read in to unsigned integers
+	int totalNumberPoints = intBuf[0];
+	if(wavelength == -1)
+		wavelength = totalNumberPoints;
+	int numWaveforms = totalNumberPoints / abs(wavelength);
+	#if defined(_OPENMP)
+	{
+		//in the case that we want to do this with openmp, this is what we do
+		short *tempShortBuffer = (short*)malloc(totalNumberPoints * sizeof(short));
+		short *output = (short*)malloc(sizeof(short)*totalNumberPoints);//output buffer
+		//first figure out the starting locations
+		int *startLocs = (int*)malloc(sizeof(int)*numWaveforms);
+		int curloc = 1; //starting read location
+		startLocs[0] = curloc;
+		for(int i = 1; i < numWaveforms; i++){
+			curloc += intBuf[curloc] + 1;
+			startLocs[i] = curloc;
+		}
+		#pragma omp parallel for
+		for(int i = 0; i < numWaveforms; i++){
+			perWaveDecompression(&output[i*wavelength], &tempShortBuffer[i*wavelength], &intBuf[startLocs[i]], wavelength, filter, filterLen, M);
+		}
+		*buf = output;
+		*buf_size = totalNumberPoints * 2;
+		free(tempShortBuffer);
+		free(intBuf);
+		return totalNumberPoints;
+	}
+	#else
+	{
+		short *tempShortBuffer = (short*)malloc(wavelength * sizeof(short)); //buffer to undo the encoding inside
+		short *output = (short*)malloc(sizeof(short) * totalNumberPoints); //output buffer
+		int curloc = 1;
+		for(int i = 0; i < numWaveforms; i++){
+			perWaveDecompression(&output[i*wavelength], tempShortBuffer, &intBuf[curloc], wavelength, filter, filterLen, M);
+			curloc += intBuf[curloc] + 1;
+		}
+		free(tempShortBuffer);
+		free(filter);
+		*buf = output;
+		*buf_size = totalNumberPoints * 2;
+		return totalNumberPoints;
+	}
+	#endif
+}
+
+
+//function to do the compression for each waveform
+//this should be thread-safe
+//input is the uncompressed buffer
+//output is a compressed buffer for that waveform
+size_t perWaveCompression(unsigned int *outputBuffer, short *inputWaveform, short *tempEncodedBuffer, int wavelength, int *filter, int filterLen, int M){
+	//tempBuffer = output location
+	//inputWaveform is the data to be processed
+	//wavelength is how much data to be processed
+	//filter is the compression/encoding filter
+	//filterLen is the length of that filter
+	encodeWaveform(inputWaveform, tempEncodedBuffer, wavelength, filter, filterLen);
+	//now to the golomb/rice encoding
+	int compressedSize = compressWithRiceCoding(tempEncodedBuffer, &outputBuffer[1], wavelength, M);
+	if(compressedSize == -1){
+		fprintf(stderr, "Waveform compression failed.\n");
+		return 0;
+	}
+	size_t t = compressedSize + 1;
+	outputBuffer[0] = compressedSize; //store the size of this section compressed
+	return t;
+>>>>>>> dev
 }
 
 int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_values[], size_t nbytes, size_t *buf_size, void **buf){
@@ -326,7 +503,11 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 	//if the waveform length is set to -1, then treat it all as one big ol batch
 	if(wavelength == -1){
 		wavelength = totalNumber;
+<<<<<<< HEAD
 	}		
+=======
+	}
+>>>>>>> dev
 	else if(nbytes % 2 == 0){
 		if((int)(nbytes / 2) % wavelength != 0){
 			fprintf(stderr, "Wavelength doesn't divide evenly with size of dataset: %ld / %d has != remainder\n", nbytes/2, wavelength);
@@ -340,6 +521,7 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		return -1;
 	}
 	int numWaves = totalNumber/wavelength;
+<<<<<<< HEAD
 	//now the compression can actually start
 	//set up the output buffer, assume the compression doesn't expand the beyond 2 times the initial size
 	unsigned int *outputBuffer = (unsigned int*)malloc(nbytes * 2 + 1); //with an additional value for the length of data being output
@@ -367,6 +549,62 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 	free(tempEncodedBuffer);
 	free(filter);
 	return 0;	
+=======
+	//check if OPENMP was used during compilation, if so do this stuff instead
+	#if defined(_OPENMP)
+	{
+		// now do the openMP version of the compression/decompression
+		//define the various output buffers and whatnot
+		short *inputWaveforms = (short*)(*buf);
+		size_t maxBufferSize = nbytes * 2; //most they can be is twice the initial size if it completely fails cause giveup = 8 so 9 bits of fail + 16 bits of the original value < 32 total
+		unsigned int *outputBuffer = (unsigned int*)malloc(maxBufferSize+1*numWaves+1); //the whole output buffer, bonus 1 for the initial output values
+		short *tempEncodedBuffer = (short*)malloc(nbytes);
+		size_t *outputSizes = (size_t*)malloc(sizeof(size_t)*numWaves); //one per waveform
+		outputBuffer[0] = totalNumber; //the total number of datapoints we expect to unpack on the receiving end
+		#pragma omp parallel for
+		for(int i = 0; i < numWaves; i++){ //this should run in parallel now across all threads available on the PC
+			//first allocate the space
+			outputSizes[i] = perWaveCompression(&outputBuffer[i*wavelength+i+1], &inputWaveforms[i*wavelength], &tempEncodedBuffer[i*wavelength], wavelength, filter, filterLen, M);
+		}
+		size_t currloc = 1;
+		//#pragma omp parallel for ordered
+		for(int i = 0; i < numWaves; i++){
+			memcpy(&outputBuffer[currloc], &outputBuffer[i*wavelength+i+1], outputSizes[i]*4);
+			currloc += outputSizes[i];
+		}
+		*buf_size = currloc*4;
+		outputBuffer = realloc(outputBuffer, *buf_size);
+		free(*buf); //free the original buffer
+		*buf = outputBuffer; //replace it with the new buffer
+		free(outputSizes);
+		free(filter);
+		free(tempEncodedBuffer);
+		return 0;
+	}
+	#else
+	{
+		short *inputWaveforms = (short*)(*buf);
+		size_t totalSize = 0;
+		size_t maxBufferSize = nbytes * 2; //most they can be is twice the initial size if it completely fails cause giveup = 8 so 9 bits of fail + 16 bits of the original value < 32 total
+		unsigned int *outputBuffer = (unsigned int*)malloc(maxBufferSize+1*numWaves+1); //the whole output buffer, bonus 1 for the initial output values
+		short *tempEncodedBuffer = (short*)malloc(sizeof(short)*wavelength);
+		outputBuffer[0] = totalNumber; //the total number of datapoints we expect to unpack on the receiving end
+		size_t currloc = 1;
+		for(int i = 0; i < numWaves; i++){
+			//first allocate the space
+			currloc += perWaveCompression(&outputBuffer[currloc], &inputWaveforms[i*wavelength], tempEncodedBuffer, wavelength, filter, filterLen, M);
+		}
+		*buf_size = currloc*4;
+		outputBuffer = realloc(outputBuffer, *buf_size);
+		
+		free(*buf); //free the original buffer
+		*buf = outputBuffer; //replace it with the new buffer
+		free(filter);
+		free(tempEncodedBuffer);
+		return 0;
+	}
+	#endif
+>>>>>>> dev
 }
 
 
@@ -374,6 +612,7 @@ size_t H5Z_filter_deltarice(unsigned int flags, size_t cd_nelmts,
 			const unsigned int cd_values[], size_t nbytes,
 			size_t *buf_size, void **buf)
 {
+<<<<<<< HEAD
 	if (flags & H5Z_FLAG_REVERSE){ // Decompress the data
 		//parse the optional parameters
 		//now get the filter information
@@ -387,13 +626,27 @@ size_t H5Z_filter_deltarice(unsigned int flags, size_t cd_nelmts,
 		free(*buf);	
 		*buf = outputBuffer;
 		return result;
+=======
+	
+	if (flags & H5Z_FLAG_REVERSE){ // Decompress the data
+		int result = readWholeCompressedByteString(cd_nelmts, cd_values, nbytes, buf_size, buf);
+		if(result == -1){
+			fprintf(stderr, "De-compression failed\n");
+			return -1;
+		}
+		return *buf_size;
+>>>>>>> dev
 	}
 	else{ //compress the data
 		int result = writeWholeCompressedByteString(cd_nelmts, cd_values, nbytes, buf_size, buf);
 		if(result == -1){
 			fprintf(stderr, "Compression failed\n");
 			//free(buf);
+<<<<<<< HEAD
 			return -1;	
+=======
+			return -1;
+>>>>>>> dev
 		}
 		return *buf_size;
 	}

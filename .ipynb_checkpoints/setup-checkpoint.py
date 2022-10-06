@@ -16,7 +16,7 @@ import sys
 import platform
 
 
-VERSION_MAJOR = 1
+VERSION_MAJOR = 0
 VERSION_MINOR = 0
 VERSION_POINT = 1 #very first version
 
