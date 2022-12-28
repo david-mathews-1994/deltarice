@@ -3,11 +3,11 @@
 In a recent git commit the format of the compressed data was tweaked. Users should be aware that any data saved with the prior version can NOT be read by the new version and should be decompressed before upgrading their version of the library.
 
 ## Main Information
-This is the git repo for the Delta-Rice compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab Experiments Data Acquisition System: http://nab.phys.virginia.edu/
+This is the git repo for the Delta-Rice compression algorithm. This algorithm is designed around the compression of signed 16 bit integers and specifically tailored to the types of data being returned by the Nab Experiments Data Acquisition System: http://nab.phys.virginia.edu/. The algorithm itself is general purpose however and can work on a variety of datasets, but it does expect 16-bit numbers. Any other precision data is cast to 16-bit. 
 
 Delta-Rice contains a Python/C package that implements this algorithm through HDF5. It is loaded via the dynamically loaded filters framework and uses filter ID 32025.
 
-The Delta-Rice compression algorithm is based around work to be published. The idea is to reduce randomness in the waveforms by using the correlation between subsequent data samples from an analog signal. As each datapoint is inherently correlated, we can reduce the variation in the data stored through filtering such as the [Link](https://en.wikipedia.org/wiki/Delta_encoding). Through this encoding we can reduce the number of unique symbols per waveform that need to be recorded, or in other words, make the spread of values to be stored more compact and centralized around 0. At this stage the algorithm uses [Link](https://en.wikipedia.org/wiki/Golomb_coding), in particular the special case of Rice Coding, to compress the data. Rice coding was chosen as it is algorithmically simpler and allows for higher throughput. 
+The Delta-Rice compression algorithm is based around work to be published. The idea is to prepare the dataset for Rice coding by using the correlation between subsequent data samples from an analog signal. As each datapoint is inherently correlated with the previous datapoint, we can reduce the variation in the data stored through filtering such as the [Link](https://en.wikipedia.org/wiki/Delta_encoding). Through this encoding operation, the number of unique symbols per waveform that need to be recorded can be reduced, or in other words, make the spread of values to be stored more compact and centralized around 0. At this stage the algorithm uses [Link](https://en.wikipedia.org/wiki/Golomb_coding), in particular the special case of Rice Coding, to compress the data. Rice coding was chosen as it is algorithmically simpler than Golomb coding and allows for higher throughput and during testing Golomb coding was not found to provide a significant decrease in size over Rice coding. 
 
 A significant portion of this code repository, in particular the code that does the installation of the library but not the compression algorithm itself, is based off of code found here: https://github.com/kiyo-masui/bitshuffle. 
 
@@ -51,7 +51,7 @@ python setup.py install
 
 This will most likely NOT succeed, and that is okay. On my system I see the following error that causes the code to fail with exit status 1120.
 ```
-LINK : error LNK2001: unresolved external symbol PyInit_libh5nabcompression
+LINK : error LNK2001: unresolved external symbol PyInit_libh5deltaricecompression
 ```
 If this error is reached, then the code actually compiled just fine for our purposes. Run the ```python setup.py install``` command a second time and you should see no errors. If you do see errors the second time, then something went wrong.
 
@@ -60,13 +60,13 @@ If you get an error about missing source files when building the extensions, try
 
 ## Example in Python
 
-This example goes through and creates a dataset using the custom Nab compression algorithm, then re-opens the file and reads in the same dataset verifying it compressed and decompressed properly. It's important to note that when using h5py and the create_dataset function that the chunksize MUST be specified. This must be specified such that the length of each waveform is the same size as the smallest dimension in the chunk. For a waveform length of 7000, this means that the chunks must be configured as (Something, 7000). If this is not done, the code will return an error. 
+This example goes through and creates a dataset using the custom deltaRice compression algorithm, then re-opens the file and reads in the same dataset verifying it compressed and decompressed properly. It's important to note that when using h5py and the create_dataset function that the chunksize MUST be specified. This must be specified such that the length of each waveform is the same size as the smallest dimension in the chunk. For a waveform length of 7000, this means that the chunks must be configured as (Something, 7000). If this is not done, the code will return an error. 
 
-Note that with this particular example the delta-rice library, in particular the nabCompression folder in the build directory, has been added to the system path allowing Python to include it.
+Note that with this particular example the delta-rice library, in particular the deltaRice folder in the build directory, has been added to the system path allowing Python to include it.
 
 ```
 import h5py
-import nabCompression.h5
+import deltaRice.h5
 import numpy as np
 
 f = h5py.File('testFile.h5', 'w')
@@ -77,7 +77,7 @@ compression_opts = (RiceParameter, WaveformLength) #required input parameters
 dtype='int16' #THIS IS A MUST. DATA CANNOT BE ANY OTHER TYPE
 dataset = f.create_dataset('data', 
     (100, 7000), 
-    compression=nabCompression.h5.H5FILTER,
+    compression=deltaRice.h5.H5FILTER,
     compression_opts = compression_opts,
     dtype=dtype, 
     chunks = (20, 7000))
@@ -111,7 +111,7 @@ This example is similar to the Python example. We create a dataset, compress it 
 #define DIM1            5
 #define CHUNK0          5 
 #define CHUNK1          5
-#define H5Z_FILTER_NAB  32025
+#define H5Z_FILTER_DELTARICE  32025
 
 int main (void){
     hid_t           file, space, dset, dcpl;    /* Handles */
@@ -129,22 +129,22 @@ int main (void){
                     i, j;
 
     /* 
-       Register nab filter filter with the library
+       Register deltarice filter filter with the library
      */
 
-    status = nab_register_h5filter();
+    status = deltarice_register_h5filter();
     /*
     Check to see if the filter properly registered to the HDF5 Library
      */
-    avail = H5Zfilter_avail(H5Z_FILTER_NAB);
+    avail = H5Zfilter_avail(H5Z_FILTER_DELTARICE);
     if (!avail) {
-        printf ("nab filter not available.\n");
+        printf ("deltarice filter not available.\n");
         return 1;
     }
-    status = H5Zget_filter_info (H5Z_FILTER_NAB, &filter_info);
+    status = H5Zget_filter_info (H5Z_FILTER_DELTARICE, &filter_info);
     if ( !(filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
                 !(filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) ) {
-        printf ("nab filter not available for encoding and decoding.\n");
+        printf ("deltarice filter not available for encoding and decoding.\n");
         return 1;
     }
 
@@ -171,7 +171,7 @@ int main (void){
      * compression filter and set the chunk size.
      */
     dcpl = H5Pcreate (H5P_DATASET_CREATE);
-    status = H5Pset_filter (dcpl, H5Z_FILTER_NAB, H5Z_FLAG_MANDATORY, (size_t)2, cd_values);
+    status = H5Pset_filter (dcpl, H5Z_FILTER_DELTARICE, H5Z_FLAG_MANDATORY, (size_t)2, cd_values);
     status = H5Pset_chunk (dcpl, 2, chunk);
 
     /*
@@ -217,11 +217,11 @@ int main (void){
     filter_type = H5Pget_filter (dcpl, 0, &flags, &nelmts, NULL, 0, NULL,
                 &filter_info);
     switch (filter_type) {
-        case H5Z_FILTER_NAB:
-            printf ("H5Z_FILTER_NAB\n");
+        case H5Z_FILTER_DELTARICE:
+            printf ("H5Z_FILTER_DELTARICE\n");
             break;
         default:
-            printf ("Not NAB as expected\n");
+            printf ("Not DELTARICE as expected\n");
     }
 
     /*
@@ -260,7 +260,7 @@ int main (void){
 In order to compile your code, you need to tell the compiler where to look for the plugin created by the setup.py script. This should be in the build/ folder and saved as a .so file for Linux distributions. The exact folder name will vary with your particular installation features and Python version. 
 
 ```
-h5cc -L/home/dgm/nabCompression/build/lib.linux-x86_64-3.8/nabCompression/plugin -Wall -o testCode testCode.c  -lh5nabcompression.cpython-38-x86_64-linux-gnu
+h5cc -L/home/dgm/deltaRice/build/lib.linux-x86_64-3.8/deltaRice/plugin -Wall -o testCode testCode.c  -lh5deltaricecompression.cpython-38-x86_64-linux-gnu
 ```
 
 You will also need to modifiy your `$LD_LIBRARY_PATH` to be the plugin folder beneath the build/ directory. This allows the system to know where to grab the linked library at runtime. This can be done via: `export LD_LIBRARY_PATH=/dir/of/plugin:$LD_LIBRARY_PATH` where `/dir/of/plugin` is wherever your plugin folder is located under the build/ directory from this gitlab. 
