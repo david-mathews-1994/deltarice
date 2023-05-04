@@ -320,8 +320,9 @@ int readWholeCompressedByteString(size_t cd_nelmts, const unsigned int* cd_value
 			curloc += intBuf[curloc] + 1;
 			startLocs[i] = curloc;
 		}
+		int i;
 		#pragma omp parallel for
-		for(int i = 0; i < numWaveforms; i++){
+		for(i = 0; i < numWaveforms; i++){
 			perWaveDecompression(&output[i*wavelength], &tempShortBuffer[i*wavelength], &intBuf[startLocs[i]], wavelength, filter, filterLen, M);
 		}
 		*buf = output;
@@ -406,8 +407,9 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		short *tempEncodedBuffer = (short*)malloc(nbytes);
 		size_t *outputSizes = (size_t*)malloc(sizeof(size_t)*numWaves); //one per waveform
 		outputBuffer[0] = totalNumber; //the total number of datapoints we expect to unpack on the receiving end
+		int i;
 		#pragma omp parallel for
-		for(int i = 0; i < numWaves; i++){ //this should run in parallel now across all threads available on the PC
+		for(i = 0; i < numWaves; i++){ //this should run in parallel now across all threads available on the PC
 			//first allocate the space
 			outputSizes[i] = perWaveCompression(&outputBuffer[i*wavelength+i+1], &inputWaveforms[i*wavelength], &tempEncodedBuffer[i*wavelength], wavelength, filter, filterLen, M);
 		}
