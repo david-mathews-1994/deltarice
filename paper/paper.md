@@ -45,14 +45,12 @@ The requirements for the first-state preparatory encoding are driven by the beha
 
 Golomb coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a division by a tunable parameter $m$, and $r$, the remainder of that division. Golomb coding expects unsigned values, but can be extended to support signed numbers by interleaving positive and negative values. This can be implemented as shown below.
 
-```
-if x >= 0:
-  xPrime = 2*x;
-else:
-  xPrime = 2*abs(x)-1;
-q = xPrime//m;
-r = xPrime - q*m;
-```
+ - if x >= 0:
+   -  xPrime = 2*x;
+- else:
+  - xPrime = 2*abs(x)-1;
+- q = xPrime//m;
+- r = xPrime - q*m;
 
 The parameter $q$ is stored in Unary coding, and $r$ is stored in truncated binary encoding. The optimal $m$ depends on the standard deviation of the data being compressed, and is determined empirically to yield the maximum compression ratio. Unary coding takes $q+1$ bits to store $q$, while the storage of $r$ takes either $s-1$ or $s$ bits, where $s=\lceil \log_2(m) \rceil$, if $0\leq r<2^{s}-m$ or if $2^{s}-m \leq r < m$ respectively. In the simpler case of Rice coding [@rice], the algorithm is the same except $m$ is restricted to only powers of 2. This simplifies the storage of the remainder $r$ to only needing $s$ bits. In both Golomb and Rice coding, large $q$ values can be problematic due to using Unary coding possibly taking more space than the original datapoint $x$. If $\lfloor \frac{x}{m} \rfloor \approx dtype(x) = b_0 $, where $dtype(x)$ refers to the number of bits originally used to encode $x$, then the compression fails and increases the number of bits required to store that value. Statistically this should be unlikely in a dataset that is well suited for Golomb/Rice coding. One of the purposes of the preparatory encoding operation is reducing the chance of this occurring. In the case that this does occur, a cutoff parameter $c$ is defined in this algorithm to set an upper limit for the value of $q$ to prevent the expansion of the storage for particularly high magnitude values of $x$. The number of bits required to store each value with Rice coding is $\lfloor \frac{\lvert x \rvert}{m} \rfloor + \log_2(m) + 2$ if $\frac{\lvert x \rvert}{m} < c$ or $c + 1 + b_0$ otherwise.
 
