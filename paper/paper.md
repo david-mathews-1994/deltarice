@@ -58,5 +58,5 @@ Once the calculation of $q$ and $r$ is complete, they are stored sequentially in
 
 The probability density function of values after preparatory encoding, $P(x)$, is used to determine the optimal value of both $m$ and $c$. These are found via minimization of $$ B(m, c) = \sum_i P(x_i) * b(x_i, m, c, b_0) $$ where $b(x_i, m, c, b_0)$ is the number of bits required for each datapoint. The sum is over all possible values of $x$ as defined by the finite range of digitized values e.g. $x$ ranges from $0$ to $16384$ for a 14 bit digitizer. 
 
-![Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The cutoff value $c$ was not utilized during this optimization](paper/images/CompressionRatioPlog.png)
+![Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The cutoff value $c$ was not utilized during this optimization](CompressionRatioPlog.png)
 
