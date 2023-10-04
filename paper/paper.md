@@ -49,4 +49,9 @@ The parameter $q$ is stored in Unary coding, and $r$ is stored in truncated bina
 
 Once the calculation of $q$ and $r$ is complete, they are stored sequentially in a 64 bit container in the order $qr$. Multiple sets of $qr$ will be stored in each 64 bit container. Once the first 32 bits of a container are occupied, they are output as a single 32 bit unsigned value, and any remaining bits within the container are shifted to the start to begin the cycle again. The remaining bits are shifted to the start of the 64 bit container and the process continues until all values of $x$ have been encoded. This ensures that no bits are wasted in the 32 bit unsigned values that are written to file, except for unused bits in the final 32 bit value output. To prevent the decompression algorithm from misinterpreting these unused bits, the total number of elements $x$ that were compressed is recorded as well.
 
-
+| Bit          | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|--------------|---|---|---|---|---|---|---|---|
+| Initial      | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1st Pack     | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 2nd Pack     | 1 | 0 | 1 | 0 | 1 | 1 | 0 | 0 |
+| After Output | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
