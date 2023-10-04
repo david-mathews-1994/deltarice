@@ -61,18 +61,8 @@ The probability density function of values after preparatory encoding, $P(x)$, i
 ![Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The cutoff value $c$ was not utilized during this optimization\label{fig:CorrelationPlot}](CompressionRatioPlot.png)
 
 ## Preparatory Encoding
-The goal of this encoding operation is to manipulate the incoming data into a form that is more optimal for Golomb Coding. As previously discussed, a more dense probability distribution is preferable as well as avoiding extremes in the inputs. The initial encoding operation is performed using a convolution filter. The implementation of the convolution can be iterative or recursive, with the optimal choice depending on the hardware and configuration. FFT-based convolutions, while computationally efficient for convolving large arrays, are not used here because the filters are assumed to be small. Filters are preferred to be small as the filter must be stored alongside the compressed data to allow for decompression and significantly long filters will prevent effective compression. Example functions for encoding and decoding data with a filter are shown below. The default filter employed in this algorithm is delta encoding, which is defined by a filter of $[1, -1]$.
+The goal of this encoding operation is to manipulate the incoming data into a form that is more optimal for Golomb Coding. As previously discussed, a more dense probability distribution is preferable as well as avoiding extremes in the inputs. The initial encoding operation is performed using a convolution filter. The implementation of the convolution can be iterative or recursive, with the optimal choice depending on the hardware and configuration. FFT-based convolutions, while computationally efficient for convolving large arrays, are not used here because the filters are assumed to be small. Filters are preferred to be small as the filter must be stored alongside the compressed data to allow for decompression and significantly long filters will prevent effective compression. Example functions for encoding and decoding data with a filter are shown in Figure \ref{eqn:EncodeDecode}. The default filter employed in this algorithm is delta encoding, which is defined by a filter of $[1, -1]$.
 
- 1.  void encodeWaveform(short* input, short* output, int inp_len, short* filt, int filt_len){
- 2.    short out;
- 3.    for(int i=0; i<inp_len; i++){
- 4.      out=input[i]*filt[0];
- 5.      for(int j=1; j<filt_len; j++){
- 6.        if ((i - j)>=0)
- 7.          out+=input[i-j]*filt[j];
- 8.        output[i]=out;
- 9.      }
- 10.   }
- 11. }
+![Example algorithms for the preparatory encoding operation. Depending on what hardware these routines are deployed on, there may be more efficient implementations \label{fig:EncodeDecode}.](EncodeDecodeAlgorithm.png){width=0.5\textwidth}
 
 
