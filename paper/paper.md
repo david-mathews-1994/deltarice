@@ -56,7 +56,23 @@ Once the calculation of $q$ and $r$ is complete, they are stored sequentially in
 | 2nd Pack     | 1 | 0 | 1 | 0 | 1 | 1 | 0 | 0 |
 | After Output | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
 
-The probability density function of values after preparatory encoding, $P(x)$, is used to determine the optimal value of both $m$ and $c$. These are found via minimization of $$ B(m, c) = \sum_i P(x_i) * b(x_i, m, c, b_0) $$ where $b(x_i, m, c, b_0)$ is the number of bits required for each datapoint. The sum is over all possible values of $x$ as defined by the finite range of digitized values e.g. $x$ ranges from $0$ to $16384$ for a 14 bit digitizer. 
+The probability density function of values after preparatory encoding, $P(x)$, is used to determine the optimal value of both $m$ and $c$. These are found via minimization of $$ B(m, c) = \sum_i P(x_i) * b(x_i, m, c, b_0) $$ where $b(x_i, m, c, b_0)$ is the number of bits required for each datapoint. The sum is over all possible values of $x$ as defined by the finite range of digitized values e.g. $x$ ranges from $0$ to $16384$ for a 14 bit digitizer. For the simple case of a Gaussian probability distribution, the relationship between the standard deviation $\sigma$ and $m$ is explored in Figure \ref{fig:CorrelationPlot}. Note that datasets with smaller standard deviations have better compression performance with Golomb coding, but are also more sensitive to the choice of $m$ parameter. The cutoff value $c$ should be optimized with a restriction on the upper size to prevent $c+1 + b_0$ from being larger than the output storage container size of 32 bits. In the case that the cutoff is reached, the compression algorithm outputs the cutoff value in Unary coding followed by $x\prime$ in binary. This greatly increases the number of bits required to encode values that are just larger than the cutoff value for $q$, but with a well tuned preparatory encoding filter and $m$ value, the probability of this occurring is small enough to have a negligible impact on the final output size.
 
-![Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The cutoff value $c$ was not utilized during this optimization](CompressionRatioPlot.png)
+![Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The cutoff value $c$ was not utilized during this optimization\label{fig:CorrelationPlot}](CompressionRatioPlot.png)
+
+## Preparatory Encoding
+The goal of this encoding operation is to manipulate the incoming data into a form that is more optimal for Golomb Coding. As previously discussed, a more dense probability distribution is preferable as well as avoiding extremes in the inputs. The initial encoding operation is performed using a convolution filter. The implementation of the convolution can be iterative or recursive, with the optimal choice depending on the hardware and configuration. FFT-based convolutions, while computationally efficient for convolving large arrays, are not used here because the filters are assumed to be small. Filters are preferred to be small as the filter must be stored alongside the compressed data to allow for decompression and significantly long filters will prevent effective compression. Example functions for encoding and decoding data with a filter are shown below. The default filter employed in this algorithm is delta encoding, which is defined by a filter of $[1, -1]$.
+
+ 1.  void encodeWaveform(short* input, short* output, int inp_len, short* filt, int filt_len){
+ 2.    short out;
+ 3.    for(int i=0; i<inp_len; i++){
+ 4.      out=input[i]*filt[0];
+ 5.      for(int j=1; j<filt_len; j++){
+ 6.        if ((i - j)>=0)
+ 7.          out+=input[i-j]*filt[j];
+ 8.        output[i]=out;
+ 9.      }
+ 10.   }
+ 11. }
+
 
