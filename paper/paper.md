@@ -43,13 +43,25 @@ This algorithm is a two-step process: the digitized signal is first passed throu
 ## Golomb Coding
 The requirements for the first-state preparatory encoding are driven by the behavior of Golomb coding, described here. Golomb coding was chosen for this compression routine specifically for its simplicity, throughput, and storage efficiency. In addition it does not require a significant amount of additional information to be stored alongside the compressed data in order for the decompression routine to function which improves storage efficiency further. This algorithm can be easily deployed on both GPUs and FPGAs with minimal adjustments/optimizations required to reach peak throughput. 
 
-Golomb coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a division by a tunable parameter $m$, and $r$, the remainder of that division. Golomb coding expects unsigned values, but can be extended to support signed numbers by interleaving positive and negative values. This can be implemented as shown below.
+Golomb coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a division by a tunable parameter $m$, and $r$, the remainder of that division. Golomb coding expects unsigned values, but can be extended to support signed numbers by interleaving positive and negative values. A straightforward way of occomplishing this is $x\prime = 2*x$ for $x>=0$ and $x\prime = 2|x|-1$ for $x<0$. With $x\prime$ known, q and r can be calculated via $q = x\prime // m$ and $r=x\prime - q * m$ where $//$ represents floor division. These $q$ and $r$ values are then packed together into the final output. 
 
- - if x >= 0:
-   -  xPrime = 2*x;
-- else:
-  - xPrime = 2*abs(x)-1;
-- q = xPrime//m;
-- r = xPrime - q*m;
+The parameter $q$ is stored in Unary coding, and $r$ is stored in truncated binary encoding. The optimal $m$ depends on the standard deviation of the data being compressed, and is determined empirically to yield the maximum compression ratio. Unary coding takes $q+1$ bits to store $q$, while the storage of $r$ takes either $s-1$ or $s$ bits, where $s=\lceil \log_2(m) \rceil$, if $0\leq r<2^{s}-m$ or if $2^{s}-m \leq r < m$ respectively. In the simpler case of Rice coding [@rice], the algorithm is the same except $m$ is restricted to only powers of 2. This simplifies the storage of the remainder $r$ to only needing $s$ bits. In both Golomb and Rice coding, large $q$ values can be problematic due to using Unary coding for the quotient $q$ which could expand to being larger than the initial storage size. Statistically this should be unlikely in a dataset that is well suited for Golomb/Rice coding which is one of the purposes of the preparatory encoding enabled in this algorithm. In the case that this does occur still, a cutoff parameter $c$ is defined in this algorithm to set an upper limit for the value of $q$ to prevent the expansion of the storage for particularly high magnitude values of $x$. This is a tunable parameter, but in this implementation it is set to $8$ by default. 
 
-The parameter $q$ is stored in Unary coding, and $r$ is stored in truncated binary encoding. The optimal $m$ depends on the standard deviation of the data being compressed, and is determined empirically to yield the maximum compression ratio. Unary coding takes $q+1$ bits to store $q$, while the storage of $r$ takes either $s-1$ or $s$ bits, where $s=\lceil \log_2(m) \rceil$, if $0\leq r<2^{s}-m$ or if $2^{s}-m \leq r < m$ respectively. In the simpler case of Rice coding [@rice], the algorithm is the same except $m$ is restricted to only powers of 2. This simplifies the storage of the remainder $r$ to only needing $s$ bits. In both Golomb and Rice coding, large $q$ values can be problematic due to using Unary coding possibly taking more space than the original datapoint $x$. If $$\lfloor \frac{x}{m} \rfloor \approx dtype(x) = b_0 $$ where $dtype(x)$ refers to the number of bits originally used to encode $x$ then the compression fails and increases the number of bits required to store that value. Statistically this should be unlikely in a dataset that is well suited for Golomb/Rice coding. One of the purposes of the preparatory encoding operation is reducing the chance of this occurring. In the case that this does occur, a cutoff parameter $c$ is defined in this algorithm to set an upper limit for the value of $q$ to prevent the expansion of the storage for particularly high magnitude values of $x$. 
+Once the calculation of $q$ and $r$ is complete, they are stored sequentially in a 64 bit container in the order $qr$. Multiple sets of $qr$ will be stored in each 64 bit container. Once the first 32 bits of a container are occupied, they are output as a single 32 bit unsigned value, and any remaining bits within the container are shifted to the start to begin the cycle again. The remaining bits are shifted to the start of the 64 bit container and the process continues until all values of $x$ have been encoded. This ensures that no bits are wasted in the 32 bit unsigned values that are written to file, except for unused bits in the final 32 bit value output. To prevent the decompression algorithm from misinterpreting these unused bits, the total number of elements $x$ that were compressed is recorded as well.
+
++-------------------+------------+----------+----------+
+| Header 1          | Header 2   | Header 3 | Header 4 |
+|                   |            |          |          |
++:=================:+:==========:+:========:+:========:+
+| row 1, column 1   | column 2   | column 3 | column 4 |
++-------------------+------------+----------+----------+
+| row 2             | cells span columns               |
++-------------------+------------+---------------------+
+| row 3             | cells      | - body              |
++-------------------+ span rows  | - elements          |
+| row 4             |            | - here              |
++===================+============+=====================+
+| Footer                                               |
++===================+============+=====================+
+
+
