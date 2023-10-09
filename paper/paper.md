@@ -100,6 +100,57 @@ The compression of individual values on FPGA is fairly straightforward, but ther
 
 ![Example FPGA diagram for the delta encoding into Rice coding algorithm without a cutoff parameter. Blocks with arrows indicate bit shifts in the direction of the arrows of the upper connection by the left connection amount. Not shown here is the storage of the first datapoint for reconstruction purposes. \label{fig:FPGAAlgorithm}.](FPGADeltaGolomb.png){width="4in"}
 
-The most difficult algorithmic problems are packing of the compressed values in storage containers and handling error cases where the compression fails and the values are expanded in size. Similarly to what was prescribed earlier, a cutoff value will need to be established to prevent expansion of the values to too great of a size. As is done on the CPU and GPU, a temporary storage location must be established that is larger than the incoming size of the data for incoming data to be encoded into until the temporary buffer is full. Once the container is full of encoded data, it can be added to some memory storage location or exported to some other process for archival of the dataset. 
+The most difficult algorithmic problems are packing of the compressed values in storage containers and handling error cases where the compression fails and the values are expanded in size. Similarly to what was prescribed earlier, a cutoff value will need to be established to prevent expansion of the values to too great of a size. As is done on the CPU and GPU, a temporary storage location must be established that is larger than the incoming size of the data for incoming data to be encoded into until the temporary buffer is full. Once the container is full of encoded data, it can be added to some memory storage location or exported to some other process for archival of the dataset. Another difficulty with FPGA deployment is getting the data to and from the FPGA, just as with the GPU. In situations where the data originates on the FPGA, such as data acquisition systsems, some of this difficulty is mitigated, but in general the data transfer times are a significant bottleneck for this routine. 
 
-The other difficulty with FPGA deployment is getting the data to and from the FPGA, just as with the GPU. However unlike the GPU, the architecture of the FPGA is better suited for the serial nature of this algorithm and the performance reflects as such. For the NI PXIe 5171 FPGAs utilized for the Nab experiment, firmware was developed that was capable of parsing multiple data streams at 250 MHz, resulting in a compression rate in excess of 2 GB/s. The other benefit of the FPGA architecture is the deterministic timing. Unlike on a CPU or GPU, the time required to compress a fixed length array is deterministic making it ideal for real-time applications such as data acquisition systems. In addition, deploying this algorithm on FPGA makes it possible to compress the data before being returned to the acquistion computer, allowing systems to increase their theoretical throughput in the case that the bandwidth to the host system was the bottleneck. This is applicable for NI PXIe 5171 FPGAs in particular as many of the compatible NI chassis are restricted to 500 MB/s or 2 GB/s MXIe connections. By transferring the compressed data stream instead the effective bandwidth of these systems can be significantly increased. 
+However, one benefit of the FPGA, is that unlike on a CPU or GPU, the time required to compress a fixed length array is deterministic making it ideal for real-time applications such as data acquisition systems. In addition, deploying this algorithm on FPGA makes it possible to compress the data before being returned to the acquistion computer, allowing systems to increase their theoretical throughput in the case that the bandwidth to the host system was the bottleneck. This is particularly relevant for the NI PXIe 5171 FPGAs used in the Nab experiment due to the 4 GB/s MXIe connection that supports 16 modules. By transferring the compressed data stream instead of the uncompressed original values, the effective bandwidth of these systems can be significantly increased.
+
+# Performance
+This algorithm was tested against several other compression routines to determine which is the best suited for deployment in real-time data acquisition systems. Both the reduction in size and the rate of the compression were compared. All tests, unless otherwise stated, were performed on the machine described here. A RAM disk was used for the storage allocation to allow for peak throughput and reduce the effect of disk I/O on the results. 
+
+ - OS: Ubuntu 22.04
+ - CPU: AMD Threadripper Pro 5955WX
+ - RAM: 4x32 GB DDR4 @ 3200 MHz
+ - Storage: tmpfs
+
+The competing algorithms used during testing are all commonly available in HDF5 implementations: Gzip, LZF, and Bitshuffle. Testing was performed in Python using the h5py library to manage the reading and writing from the HDF5 file [@h5py]. Each test was performed 10 times to reduce random variance in the results and the mean of these tests is reported. For all testing, the initial data is stored in memory before being written to the file. All data was written to a ramdisk configured with tmpfs to reduce dependence on harddrive read/write performance. An additional set of benchmarks were done for each dataset without compression enabled to serve as a baseline reference for both ramdisk and HDF5 read/write performance. The Delta-Rice algorithm was run in both single-threaded and multi-threaded mode to show the scaling performance of the algorithm and used the default $m=8$ parameter and the delta encoding filter for all datasets. Gzip, LZF, and Bitshuffle were all run with the default parameters. Figure \ref{fig:ComparingSignalFeatures} shows examples of the signal features from each experiment. Each signal type has very different shape features and lengths deliberately to test the flexibility of the algorithms.
+
+![Comparing the features of the different signal types from Nab, nEDM@SNS, and NOPTREX. \label{fig:ComparingSignalFeatures}.](ComparingSignalFeatures.png){width="4in"}
+
+The first results are for the Nab experiment dataset. All methods used the same chunk size of $2000\times7000$ and the segment length in Delta-Rice was set to 7000. 
+
+| Compression Method      | File Size (%) | Read (MB/s) | Write (MB/s) |
+|-------------------------|---------------|-------------|--------------|
+| No Compression          | 100           | 3587        | 2906         |
+| Gzip                    | 39            | 374         | 71           |
+| LZF                     | 59            | 717         | 554          |
+| Bitshuffle (32 threads) | 38            | 1852        | 2131         |
+| Delta-Rice (1-thread)   | 29            | 229         | 500          |
+| Delta-Rice (32-thread)  | 29            | 1782        | 2387         |
+
+The second set of testing was performed on data from the NOPTREX collaboration [@noptrex]. All methods used a chunksize of $32\times500000$ with a segment length of $500000$ specified for the Delta-Rice method. 
+
+| Compression Method      | File Size (%) | Read (MB/s) | Write (MB/s) |
+|-------------------------|---------------|-------------|--------------|
+| No Compression          | 100           | 3792        | 2829         |
+| Gzip                    | 22            | 472         | 75           |
+| LZF                     | 44            | 767         | 670          |
+| Bitshuffle (32 threads) | 26            | 1201        | 2754         |
+| Delta-Rice (1-thread)   | 25            | 435         | 855          |
+| Delta-Rice (32-thread)  | 25            | 2235        | 2548         |
+
+The third suite of tests were run on simulated signals from the nEDM@SNS experiment. All methods used a chunk size of $32\times81920$ and a segment length of $81920$ was set for the Delta-Rice method. 
+
+| Compression Method      | File Size (%) | Read (MB/s) | Write (MB/s) |
+|-------------------------|---------------|-------------|--------------|
+| No Compression          | 100           | 3759        | 3799         |
+| Gzip                    | 29            | 440         | 75           |
+| LZF                     | 49            | 722         | 662          |
+| Bitshuffle (32 threads) | 30            | 1833        | 1353         |
+| Delta-Rice (1-thread)   | 27            | 436         | 539          |
+| Delta-Rice (32-thread)  | 27            | 1717        | 2084         |
+
+
+
+
+
+
