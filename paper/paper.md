@@ -112,7 +112,7 @@ This algorithm was tested against several other compression routines to determin
  - RAM: 4x32 GB DDR4 @ 3200 MHz
  - Storage: tmpfs
 
-The competing algorithms used during testing are all commonly available in HDF5 implementations: Gzip, LZF, and Bitshuffle. Testing was performed in Python using the h5py library to manage the reading and writing from the HDF5 file [@h5py]. Each test was performed 10 times to reduce random variance in the results and the mean of these tests is reported. For all testing, the initial data is stored in memory before being written to the file. All data was written to a ramdisk configured with tmpfs to reduce dependence on harddrive read/write performance. An additional set of benchmarks were done for each dataset without compression enabled to serve as a baseline reference for both ramdisk and HDF5 read/write performance. The Delta-Rice algorithm was run in both single-threaded and multi-threaded mode to show the scaling performance of the algorithm and used the default $m=8$ parameter and the delta encoding filter for all datasets. Gzip, LZF, and Bitshuffle were all run with the default parameters. Figure \ref{fig:ComparingSignalFeatures} shows examples of the signal features from each experiment. Each signal type has very different shape features and lengths deliberately to test the flexibility of the algorithms.
+The competing algorithms used during testing are all commonly available in HDF5 implementations: Gzip, LZF, and Bitshuffle. Testing was performed in Python using the h5py library to manage the reading and writing from the HDF5 file [@h5py]. Each test was performed 10 times to reduce random variance in the results and the mean of these tests is reported. For all testing, the initial data is stored in memory before being written to the file. All data was written to a ramdisk configured with tmpfs to reduce dependence on harddrive read/write performance. An additional set of benchmarks were done for each dataset without compression enabled to serve as a baseline reference for both ramdisk and HDF5 read/write performance. The Delta-Rice algorithm was run in both single-threaded and multi-threaded mode to show the scaling performance of the algorithm and used the default $m=8$ parameter and the delta encoding filter for all datasets. Gzip, LZF, and Bitshuffle were all run with the default parameters. Figure \ref{fig:ComparingSignalFeatures} shows examples of the signal features from each experiment. Each signal type has very different shape features and lengths deliberately to test the flexibility of the algorithms. For the GPU testing, the H5D_READ_CHUNK and H5D_WRITE_CHUNK functions were used to directly read/write each chunk to bypass the usual compression pipeline in HDF5. 
 
 ![Comparing the features of the different signal types from Nab, nEDM@SNS, and NOPTREX. \label{fig:ComparingSignalFeatures}.](ComparingSignalFeatures.png){width="4in"}
 
@@ -126,6 +126,7 @@ The first results are for the Nab experiment dataset. All methods used the same 
 | Bitshuffle (32 threads) | 38            | 1852        | 2131         |
 | Delta-Rice (1-thread)   | 29            | 229         | 500          |
 | Delta-Rice (32-thread)  | 29            | 1782        | 2387         |
+| Delta-Rice GPU          | 29            |             |              |
 
 The second set of testing was performed on data from the NOPTREX collaboration [@noptrex]. All methods used a chunksize of $32\times500000$ with a segment length of $500000$ specified for the Delta-Rice method. 
 
@@ -137,6 +138,7 @@ The second set of testing was performed on data from the NOPTREX collaboration [
 | Bitshuffle (32 threads) | 26            | 1201        | 2754         |
 | Delta-Rice (1-thread)   | 25            | 435         | 855          |
 | Delta-Rice (32-thread)  | 25            | 2235        | 2548         |
+| Delta-Rice GPU          | 25            |             |              |
 
 The third suite of tests were run on simulated signals from the nEDM@SNS experiment. All methods used a chunk size of $32\times81920$ and a segment length of $81920$ was set for the Delta-Rice method. 
 
@@ -148,8 +150,9 @@ The third suite of tests were run on simulated signals from the nEDM@SNS experim
 | Bitshuffle (32 threads) | 30            | 1833        | 1353         |
 | Delta-Rice (1-thread)   | 27            | 436         | 539          |
 | Delta-Rice (32-thread)  | 27            | 1717        | 2084         |
+| Delta-Rice GPU          | 27            |             |              |
 
-
+Based on these results, both Bitshuffle and Delta-Rice are excellent algorithms for real-time data compression applications. However, in all tests Delta-Rice resulted in a more compressed output file while having similar throughput in multi-threaded CPU tests. 
 
 
 
