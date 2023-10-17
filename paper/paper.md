@@ -153,13 +153,13 @@ For these datasets, the Delta-Rice algorithm either matches or outperforms the o
 
 ## GPU Performance Testing
 
-For testing GPU performance, the Nab experimental dataset was focussed on. The computer used during this testing is described below.
+For testing GPU performance a new computer was used and its specifications are below. 
 
  - OS: Red Hat Enterprise 7.9
  - CPU: AMD EPYC 7513 
  - RAM: 512GB DDR4
  - Storage: tmpfs
- - GPU: Nvidia A100 40GB
+ - GPU: Nvidia A100 80GB
 
 The most straightforward way of implementing this routine on GPU is by compressing/decompressing one chunk of data in parallel, similar to how it is performed on CPU. While it is possible to handle multiple chunks at once, this was not done during testing to keep the configuration as similar as possible to the CPU tests. For a chunk that is $2000\times7000$ as for the Nab dataset testing before, that would require $2000$ independent threads operating in parallel on a GPU for both the compression and decompression operations. Depending on the GPU in particular being used, that may be either too many or too few depending on the number of compute units available in the system. Tuning will need to be performed on a per-GPU basis to optimize the chunk size for throughput. For this testing, a few different chunk sizes were used to demonstrate this on the Nab dataset. The table below is for the same chunk size of $2000\times7000$ that was used previously on the Nab dataset. Only multi-threaded CPU performance is shown below. 
 
@@ -189,7 +189,12 @@ In this particular set of tests, the GPU compression/decompression performance w
 
 The GPU compression and decompression performance truly shines when the data originates or has its final destination on the GPU. When the situation requires transfers to and from the GPU, the performance is significantly lower and in general the multi-threaded CPU implementation is a better choice. However, if a user is in a situation where they are reading data from a file with the intent of processing on GPU, this routine can significantly improve the read performance to nearly the full throughput of an uncompressed data file. 
 
+## FPGA Performance Testing
 
+Unlike the CPU and GPU, FPGAs are deterministic devices that will perform a fixed set of operations every clock cycle. As such, the frequency at which the compression or decompression code is programmed will set the throughput of the routine. For example, if the algortihm is compiled to run at 125 MHz, then the throughput of the code will be $\approx 238$ MB/s as every clock cycle will compress a single $16$ bit number. For the NI PXIe 5171 Oscilloscope Modules used in the Nab experiment, the compression routine for delta encoding was able to be synthesized for a single channel at $250$ MHz, or $\approx 480$MB/s. While this is not a high enough throughput to handle the full 8 channel data stream from the system, it is enough for applications such as the Nab experiment where the cumulative data rate from the 16 FPGA system is expected to be between $100$ and $400$ MB/s [@david_2022]. By having the FPGA compress data from multiple channels simultaneously, it is possible for this rate to be improved even further, but the number of simultaneous streams and maximum frequency will depend entirely on the FPGA being deployed to. 
+
+# Conclusion
+The Delta-Rice algorithm presented in this document is a general purpose method for compressing digitized analog data at a rapid rate on CPU, GPU, or FPGA. This algorithm's two step process first reduces the inherent correlations between subsequent values in digitized signals to prepare the dataset for the second step in the process which is Golomb/Rice coding. This method can be generalized to a variety of systems that depend on recording digitized analog signals while offering greater throughput than commonly available routines in the HDF5 library. Currently the algorithm is tailored for 16-bit integer data but it can be generalized for arbitrary precision integer data with some minor modifications. As demonstrated for CPUs, this algorithm outperforms many traditional compression algorithms implemented in HDF5 in both the achieved compression ratio and also read/write throughput. For the Nab experiment, this algorithm will be implemented on CPU to compress the incoming data in real time reducing the output data size to $29\%$ of the original size.
 
 
 
