@@ -1,5 +1,5 @@
 ---
-title: 'Gala: A Python package for galactic dynamics'
+title: 'Delta-Rice: A HDF5 Compression Plugin optimized for Digitized Detector Data' 
 tags:
   - h5py
   - HDF5
