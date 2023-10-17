@@ -112,7 +112,7 @@ This algorithm was tested against several other compression routines to determin
  - RAM: 4x32 GB DDR4 @ 3200 MHz
  - Storage: tmpfs
 
-The competing algorithms used during testing are all commonly available in HDF5 implementations: Gzip, LZF, and Bitshuffle. Testing was performed in Python using the h5py library to manage the reading and writing from the HDF5 file [@h5py]. Each test was performed 10 times to reduce random variance in the results and the mean of these tests is reported. For all testing, the initial data is stored in memory before being written to the file. All data was written to a ramdisk configured with tmpfs to reduce dependence on harddrive read/write performance. An additional set of benchmarks were done for each dataset without compression enabled to serve as a baseline reference for both ramdisk and HDF5 read/write performance. The Delta-Rice algorithm was run in both single-threaded and multi-threaded mode to show the scaling performance of the algorithm and used the default $m=8$ parameter and the delta encoding filter for all datasets. Gzip, LZF, and Bitshuffle were all run with the default parameters. Figure \ref{fig:ComparingSignalFeatures} shows examples of the signal features from each experiment. Each signal type has very different shape features and lengths deliberately to test the flexibility of the algorithms. For the GPU testing, the H5D_READ_CHUNK and H5D_WRITE_CHUNK functions were used to directly read/write each chunk to bypass the usual compression pipeline in HDF5. 
+The competing algorithms used during testing are all commonly available in HDF5 implementations: Gzip, LZF, and Bitshuffle. Testing was performed in Python using the h5py library to manage the reading and writing from the HDF5 file [@h5py]. Each test was performed 10 times to reduce random variance in the results and the mean of these tests is reported. For all testing, the initial data is stored in memory before being written to the file. All data was written to a ramdisk configured with tmpfs to reduce dependence on harddrive read/write performance. An additional set of benchmarks were done for each dataset without compression enabled to serve as a baseline reference for both ramdisk and HDF5 read/write performance. The Delta-Rice algorithm was run in both single-threaded and multi-threaded mode to show the scaling performance of the algorithm and used the default $m=8$ parameter and the delta encoding filter for all datasets. Gzip, LZF, and Bitshuffle were all run with the default parameters. Figure \ref{fig:ComparingSignalFeatures} shows examples of the signal features from each experiment. Each signal type has very different shape features and lengths deliberately to test the flexibility of the algorithms. 
 
 ![Comparing the features of the different signal types from Nab, nEDM@SNS, and NOPTREX. \label{fig:ComparingSignalFeatures}.](ComparingSignalFeatures.png){width="4in"}
 
@@ -126,7 +126,6 @@ The first results are for the Nab experiment dataset. All methods used the same 
 | Bitshuffle (32 threads) | 38            | 1852        | 2131         |
 | Delta-Rice (1-thread)   | 29            | 229         | 500          |
 | Delta-Rice (32-thread)  | 29            | 1782        | 2387         |
-| Delta-Rice GPU          | 29            |             |              |
 
 The second set of testing was performed on data from the NOPTREX collaboration [@noptrex]. All methods used a chunksize of $32\times500000$ with a segment length of $500000$ specified for the Delta-Rice method. 
 
@@ -138,7 +137,6 @@ The second set of testing was performed on data from the NOPTREX collaboration [
 | Bitshuffle (32 threads) | 26            | 1201        | 2754         |
 | Delta-Rice (1-thread)   | 25            | 435         | 855          |
 | Delta-Rice (32-thread)  | 25            | 2235        | 2548         |
-| Delta-Rice GPU          | 25            |             |              |
 
 The third suite of tests were run on simulated signals from the nEDM@SNS experiment. All methods used a chunk size of $32\times81920$ and a segment length of $81920$ was set for the Delta-Rice method. 
 
@@ -150,9 +148,48 @@ The third suite of tests were run on simulated signals from the nEDM@SNS experim
 | Bitshuffle (32 threads) | 30            | 1833        | 1353         |
 | Delta-Rice (1-thread)   | 27            | 436         | 539          |
 | Delta-Rice (32-thread)  | 27            | 1717        | 2084         |
-| Delta-Rice GPU          | 27            |             |              |
 
-Based on these results, both Bitshuffle and Delta-Rice are excellent algorithms for real-time data compression applications. However, in all tests Delta-Rice resulted in a more compressed output file while having similar throughput in multi-threaded CPU tests. 
+For these datasets, the Delta-Rice algorithm either matches or outperforms the other algorithms in both file size reduction and read/write throughput. The only case where Delta-Rice doesn't offer the best size reduction is for the NOPTREX dataset where Gzip reduced the file size a few percent 3% more, but at the cost of several times slower read/write performance. The Bitshuffle algortihm was the closest competitor in these tests but was consistently producing a few percent larger files. 
+
+## GPU Performance Testing
+
+For testing GPU performance, the Nab experimental dataset was focussed on. The computer used during this testing is described below.
+
+ - OS: Red Hat Enterprise 7.9
+ - CPU: AMD EPYC 7513 
+ - RAM: 512GB DDR4
+ - Storage: tmpfs
+ - GPU: Nvidia A100 40GB
+
+The most straightforward way of implementing this routine on GPU is by compressing/decompressing one chunk of data in parallel, similar to how it is performed on CPU. While it is possible to handle multiple chunks at once, this was not done during testing to keep the configuration as similar as possible to the CPU tests. For a chunk that is $2000\times7000$ as for the Nab dataset testing before, that would require $2000$ independent threads operating in parallel on a GPU for both the compression and decompression operations. Depending on the GPU in particular being used, that may be either too many or too few depending on the number of compute units available in the system. Tuning will need to be performed on a per-GPU basis to optimize the chunk size for throughput. For this testing, a few different chunk sizes were used to demonstrate this on the Nab dataset. The table below is for the same chunk size of $2000\times7000$ that was used previously on the Nab dataset. Only multi-threaded CPU performance is shown below. 
+
+| Method               | Data Source Location | Target Location | Throughput |
+|----------------------|----------------------|-----------------|------------|
+| CPU No Compression   | RAM                  | File            | 6000 MB/s  |
+| CPU No Compression   | File                 | RAM             | 7100 MB/s  |
+| CPU With Compression | RAM                  | File            | 1250 MB/s  |
+| CPU With Compression | File                 | RAM             | 2050 MB/s  |
+| GPU With Compression | RAM                  | File            | 1210 MB/s  |
+| GPU With Compression | File                 | RAM             | 2150 MB/s  |
+| GPU With Compression | VRAM                 | File            | 2550 MB/s  |
+| GPU With Compression | File                 | VRAM            | 3375 MB/s  |
+
+In this particular set of tests, the GPU compression/decompression performance was roughly the same when the data source or destination were not on the GPU. These cases require an additional data transfer which will always slow down the code at least some amount. When the data is being read from the file, decompressed on GPU, and remains on GPU has by far the highest throughput because the total amount of data transfered from RAM to VRAM was the lowest in this instance. Increasing the chunk size to $20000\times7000$ improved performance of the compression routine across the board due to allowing for more parallel instances at once as shown below.
+
+| Method               | Data Source Location | Target Location | Throughput |
+|----------------------|----------------------|-----------------|------------|
+| CPU No Compression   | RAM                  | File            | 5850 MB/s  |
+| CPU No Compression   | File                 | RAM             | 7050 MB/s  |
+| CPU With Compression | RAM                  | File            | 2850 MB/s  |
+| CPU With Compression | File                 | RAM             | 2550 MB/s  |
+| GPU With Compression | RAM                  | File            | 1300 MB/s  |
+| GPU With Compression | File                 | RAM             | 2450 MB/s  |
+| GPU With Compression | VRAM                 | File            | 2800 MB/s  |
+| GPU With Compression | File                 | VRAM            | 5900 MB/s  |
+
+The GPU compression and decompression performance truly shines when the data originates or has its final destination on the GPU. When the situation requires transfers to and from the GPU, the performance is significantly lower and in general the multi-threaded CPU implementation is a better choice. However, if a user is in a situation where they are reading data from a file with the intent of processing on GPU, this routine can significantly improve the read performance to nearly the full throughput of an uncompressed data file. 
+
+
 
 
 
