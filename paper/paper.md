@@ -7,10 +7,14 @@ tags:
   - digitization
   - GPU
 authors:
-  - name: David Mathews
+  - name: D. G. Mathews
     orcid: 0000-0002-4897-4379
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
-    corresponding: true 
+    corresponding: true
+  - name: C. B. Crawford
+    orcid: 0000-0002-1932-4334
+    affiliation: "2" # (Multiple affiliations must be quoted)
+    corresponding: false
 affiliations:
  - name: Oak Ridge National Laboratory
    index: 1
