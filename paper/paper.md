@@ -15,11 +15,79 @@ authors:
     orcid: 0000-0002-1932-4334
     affiliation: "2" # (Multiple affiliations must be quoted)
     corresponding: false
+  - name: S. Bae{\ss}ler
+    orcid: 0000-0001-7732-9873
+    affiliation: "1, 3" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: N. Birge
+    orcid: 0000-0003-1894-5494
+    affiliation: "4" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: L. J. Broussard
+    orcid: 0000-0001-9182-2808
+    affiliation: "1" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: F. Gonzalez
+    orcid: 0000-0002-5954-4155
+    affiliation: "1" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: L. Hayen
+    orcid: 0000-0002-9471-0964
+    affiliation: "5, 6, 7" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: A. Jezghani
+    orcid: 0000-0002-4302-4227
+    affiliation: "2, 8" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: R. Mammei
+    orcid: 
+    affiliation: "9, 10" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: A. Mendelsohn
+    orcid: 0000-0002-4847-2133
+    affiliation: "9" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: G. Randall
+    orcid: 0000-0002-9713-8465
+    affiliation: "11" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: G. V. Riley
+    orcid: 0000-0001-7323-8448
+    affiliation: "12" # (Multiple affiliations must be quoted)
+    corresponding: false
+  - name: D. C. Schaper
+    orcid: 0000-0002-6219-650X
+    affiliation: "2, 12" # (Multiple affiliations must be quoted)
+    corresponding: false
+  
+  
 affiliations:
  - name: Oak Ridge National Laboratory
    index: 1
  - name: University of Kentucky
    index: 2
+ - name: University of Virginia
+   index: 3
+ - name: University of Tennessee
+   index: 4
+ - name: North Carolina State University
+   index: 5
+ - name: Triangle Universities Nuclear Laboratory
+   index: 6
+ - name: Normandie University
+   index: 7
+ - name: Georgia Institute of Technology
+   index: 8
+ - name: University of Manitoba
+   index: 9
+ - name: University of Winnipeg
+   index: 10
+ - name: Arizona State University
+   index: 11
+ - name: Los Alamos National Laboratory
+   index: 12
+ 
+   
 date: 3 October 2023
 bibliography: paper.bib
 
