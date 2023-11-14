@@ -15,7 +15,7 @@ authors:
     orcid: 0000-0002-1932-4334
     affiliation: "2" # (Multiple affiliations must be quoted)
     corresponding: false
-  - name: S. Bae{\ss}ler
+  - name: S. Baessler
     orcid: 0000-0001-7732-9873
     affiliation: "1, 3" # (Multiple affiliations must be quoted)
     corresponding: false
