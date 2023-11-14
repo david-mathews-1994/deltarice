@@ -97,6 +97,11 @@ aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
 aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
+[^1]: Notice: This manuscript has been authored by UT-Battelle, LLC, under contract DE-AC05-00OR22725 with the US Department of Energy (DOE). The US government retains and the publisher, by accepting the article for publication, acknowl-edges that the US government retains a nonexclusive, paid-up, irrevocable, worldwide license to publish or reproduce the pub-
+lished form of this manuscript, or allow others to do so, for US government purposes. DOE will provide public access to these results of federally sponsored research in accordance with the
+DOE Public Access Plan (http://energy.gov/downloads/doe-public-access-plan).
+
+
 # Summary
 
 An efficient method for high performance lossless compression of digitized analog signals within the HDF5 library and data format is presented. This algorithm was developed for the Nab experiment, a fundamental neutron physics experiment, but is broadly applicable to other experimental efforts requiring lossless compression of noisy data. This is a two-step process where correlations between consecutive datapoints are reduced before being passed to a traditional Rice compression algorithm. The reduction of correlations can be tuned to match each dataset through adjustment of the pre-processing filter. A routine for determining the optimal filter for a dataset is demonstrated. Also demonstrated are modifications to allow deployment of this algorithm to both FPGA and GPU architectures. When applied to data collected by the Nab data acquisition system, this method created output files which were 29% their initial size, and was able to do so with an average read/write throughput in excess of 2 GB/s on a single CPU. Compared to the widely used G-zip compression routine, Delta-Rice reduces the file size by 33% more with over an order of magnitude increase in read/write throughput. Delta-Rice is available to users through the HDF5 library.
