@@ -7,7 +7,7 @@ tags:
   - digitization
   - GPU
 authors:
-  - name: D. G. Mathews
+  - name: D. G. Mathews [^1]
     orcid: 0000-0002-4897-4379
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
     corresponding: true
