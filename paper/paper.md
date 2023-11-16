@@ -273,6 +273,12 @@ Unlike the CPU and GPU, FPGAs are deterministic devices that will perform a fixe
 # Conclusion
 The Delta-Rice algorithm presented in this document is a general purpose method for compressing digitized analog data at a rapid rate on CPU, GPU, or FPGA. This algorithm's two step process first reduces the inherent correlations between subsequent values in digitized signals to prepare the dataset for the second step in the process, which is Golomb/Rice coding. This method can be generalized to a variety of systems that depend on recording digitized analog signals while offering greater throughput than commonly available routines in the HDF5 library. Currently, the algorithm is tailored for 16-bit integer data but it can be generalized for arbitrary precision integer data with some minor modifications. As demonstrated for CPUs, this algorithm outperforms many traditional compression algorithms implemented in HDF5 in both the achieved compression ratio and also read/write throughput for waveform data. For GPUs, the performance of this routine far outscales that of the CPU implementation, particularly when decompressing data for analysis on the GPU. For the Nab experiment, this algorithm will be implemented on CPU to compress the incoming data in real time reducing the output data size to $29\%$ of the original size.
 
+# Acknowledgements
+
+This research was sponsored by the U.S. Department of Energy (DOE), Office of Science, Office of Nuclear Physics [contracts DE-AC05-00OR22725, DE-SC0014622, DE-FG02-03ER41258] and National Science Foundation (NSF) [contract PHY-1812367]. This research was also spon-
+sored by the U.S. Department of Energy, Office of Science, Office of Workforce Development for Teachers and Scientists (WDTS) Graduate
+Student Research (SCGSR) program. This research was supported in part through research cyberinfrastructure resources and services provided by the Partnership for an Advanced Computing Environment (PACE) at the Georgia Institute of Technology, Atlanta, Georgia, USA.
+
 
 
 
