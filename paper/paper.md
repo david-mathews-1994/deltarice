@@ -216,9 +216,7 @@ For testing GPU performance a different computer was used and its specifications
  - Storage: tmpfs
  - GPU: Nvidia A100 80GB
 
-The most straightforward way of implementing this routine on GPU is by compressing/decompressing one chunk of data in parallel, similar to how it is performed on CPU. While it is possible to handle multiple chunks at once, this was not done during testing to keep the configuration as similar as possible to the CPU tests. For a chunk that is $2000\times7000$ as for the Nab dataset testing before, that would require $2000$ independent threads operating in parallel on a GPU for both the compression and decompression operations. Depending on the GPU in particular being used, that may be either too many or too few depending on the number of compute units available in the system. Tuning will need to be performed on a per-GPU basis to optimize the chunk size for throughput. 
-
-For this testing, a few different chunk sizes were used to demonstrate this on the Nab dataset. The table below is for the same chunk size of $2000\times7000$ that was used previously on the Nab dataset. Only multi-threaded CPU performance is shown below. Note that File in these tests denotes the source or target was the HDF5 file stored using tmpfs whereas RAM denotes the data started or stopped as an array in memory outside of the HDF5 file structure.
+For this testing, a few different chunk sizes were used for the Nab dataset. The table below is for the same chunk size of $2000\times7000$ that was used previously on the Nab dataset vs multi-threaded CPU performance. 
 
 | Method               | Data Source Location | Target Location | Throughput |
 |----------------------|----------------------|-----------------|------------|
@@ -231,7 +229,7 @@ For this testing, a few different chunk sizes were used to demonstrate this on t
 | GPU With Compression | VRAM                 | File            | 2550 MB/s  |
 | GPU With Compression | File                 | VRAM            | 3375 MB/s  |
 
-In this particular set of tests, the GPU compression/decompression performance was roughly the same when the data source or destination were not on the GPU. These cases require an additional data transfer which reduces throughput. The highest throughput case was when the data is read compressed from the file, decompressed on the GPU, and remains on the GPU. This is because the total amount of data transfered to and from VRAM is the smallest of all cases. Increasing the chunk size to $20000\times7000$ improved performance of the compression routine across the board due to allowing for more parallel instances at once as shown below.
+The table below shows the performance with a larger chunk size of $20000\times7000$.
 
 | Method               | Data Source Location | Target Location | Throughput |
 |----------------------|----------------------|-----------------|------------|
@@ -244,7 +242,7 @@ In this particular set of tests, the GPU compression/decompression performance w
 | GPU With Compression | VRAM                 | File            | 2800 MB/s  |
 | GPU With Compression | File                 | VRAM            | 5900 MB/s  |
 
-The GPU compression and decompression performance truly shines when the data originates or has its final destination on the GPU. When the situation requires transfers to and from the GPU, the performance is significantly lower, and in general the multi-threaded CPU implementation is a better choice. However, if a user is in a situation where they are reading data from a file with the intent of processing on GPU, this routine can significantly improve the read performance to nearly the full throughput of an uncompressed data file. 
+The GPU compression and decompression performance truly shines when the data is read from a file and remains on GPU for future analysis. 
 
 ## FPGA Performance Testing
 
