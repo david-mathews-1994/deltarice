@@ -27,12 +27,12 @@ This has been tested and verified to work on Ubuntu 20.04 and WSL Ubuntu.
 ## Installation instructions for Windows
 Installation requires Python 3.3+, HDF5 1.8.4 or later, HDF5 for python (h5py), Numpy, and Cython. Delta-Rice is linked against HDF5. To use the dynamically loaded HDF5 filter requires HDF5 1.8.11 or later. 
 
-To install you first need to install the HDF5 library through conda. I used anaconda prompt to do this whole process. 
+To install you first need to install the HDF5 library. I did this process through conda using Anaconda prompt.
 
 ```
 conda install -c anaconda hdf5
 ```
-With hdf5 installed, find the installation location. The default installation location should be beneath the anaconda3/pkgs folder on your system. With this installation location found, you need to open the setup.py file and modify the initial definition of the FALLBACK_CONFIG variable to match your system. 
+With hdf5 installed, find the installation location. The default installation location should be beneath the anaconda3/pkgs folder on your system. With this installation location found, you need to open the setup.py file and modify the initial definition of the FALLBACK_CONFIG variable to match your system. An example for my computer is shown below.  
 
 ```
 FALLBACK_CONFIG = {
@@ -53,10 +53,7 @@ This will most likely NOT succeed, and that is okay. On my system I see the foll
 ```
 LINK : error LNK2001: unresolved external symbol PyInit_libh5deltaricecompression
 ```
-If this error is reached, then the code actually compiled just fine for our purposes. Run the ```python setup.py install``` command a second time and you should see no errors. If you do see errors the second time, then something went wrong.
-
-If you get an error about missing source files when building the extensions, try upgrading setuptools. setuptools prior to 0.7 sometimes doesn't work with Cython. 
-
+If this error is reached, then the code actually compiled just fine for our purposes. Run the ```python setup.py install``` command a second time and you should see no errors. If you do see errors the second time, then something went wrong. In particular, if you get an error about missing source files when building the extensions, try upgrading setuptools. I have noticed compatibility issues with setuptools prior to 0.7 not working with Cython. 
 
 ## Example in Python
 
