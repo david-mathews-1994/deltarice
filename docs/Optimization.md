@@ -7,7 +7,8 @@ The optimization of M and the Encoding Filter can be done independently, or in t
 Optimization of $m$ requires knowledge of the probability density function of values after preparatory encoding, $P(x)$. Determining of $P(x)$ can be done either on a per-file basis which will provide the best possible compression from this method at the expense of throughput, or the assumption can be made that $P(x)$ does not change significantly from file to file in a dataset and can be determined once for a subset of the data. The optimal value for $m$ is found via minimization of $$ B(m, c) = \sum_i P(x_i) * b(x_i, m, c, b_0) $$ where $b(x_i, m, c, b_0)$ is the number of bits required for each datapoint and $b_0$ is the number of bits used in the original representation of each value $x_i$. The sum is over all possible values of $x_i$ as defined by the finite range of digitized values. For example, $x_i$ ranges from $0$ to $16383$ for 14 bit digitizers. For the case of a Gaussian probability distribution $P(x)$ centered about $0$, the relationship between the standard deviation $\sigma$ and $m$ is explored in Figure \ref{fig:CorrelationPlot}. Note that datasets with smaller standard deviations will compress better than larger standard deviation datasets, but are also more sensitive to the choice of $m$ parameter.
 
 ![](./images/CompressionRatioPlotCropped.png?raw=true)
-*Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with $\star$ represent the best compression for that $\sigma$ value. The values of $x$ ranged from $-8192$ to $8192$ as if from a signed 14 bit digitizer.*
+
+*Compression Ratio as a function of $m$ and $\sigma$ for Gaussian distributions using Rice Coding. Locations marked with * represent the best compression for that $\sigma$ value. The values of $x$ ranged from $-8192$ to $8192$ as if from a signed 14 bit digitizer.*
 
 
 ## Optimization of the Encoding Filter
