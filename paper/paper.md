@@ -130,7 +130,8 @@ The outputs from this method are packed sequentially into a temporary 64 bit sto
 ## Preparatory Encoding
 Preparatory encoding is done to adjust the dataset to a form more optimal for Rice Coding. By default, this is done with delta encoding which stores the difference of subsequent values. The image below shows an example of this when applied to a signal from the Nab experiment. A simple optimization routine for determining the ideal filter is discussed in [Optimization](./../docs/Optimization.md).
 
-![](./images/ExampleEncoding.png)
+![](./../docs/images/ExampleEncoding.png?raw=true)
+
 *Left: A waveform before and after delta encoding. Applying Rice coding with $m=8$ on the original signal expands the size of the waveform from 14 kB to 18.2 kB. The same Rice coding operation on the delta encoded waveform compresses the waveform to 4.6 kB, 33% the original size. Right: A histogram of a sample dataset before and after delta encoding. Note the clear reduction in the distribution width and that the most probable values are centered around 0*
 
 # Implementation
