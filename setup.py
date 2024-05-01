@@ -48,7 +48,7 @@ MARCH_DEFAULT = "native"
 if sys.platform == "darwin":
     OMP_DEFAULT = False
 else:
-    OMP_DEFAULT = True
+    OMP_DEFAULT = True 
 
 FALLBACK_CONFIG = {
     "include_dirs": [],
