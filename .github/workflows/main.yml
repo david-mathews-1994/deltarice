@@ -3,10 +3,11 @@ on:
   pull_request:
     branches:
     - master
+    - CITesting
   push:
     branches:
     - master
-
+    - CITesting
 jobs:
   run-tests:
 
