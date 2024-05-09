@@ -48,7 +48,7 @@ extern bool checkIfDeltaFilter(int *filter, int filt_len){
 
 extern void encodeWaveform(short *input, short *output, int input_len, int * filt, int filt_len){
 	/* Go through and check if the filter is the special case or not */
-	if (checkIfDeltaFilter(filt, filt_len)){
+        if (checkIfDeltaFilter(filt, filt_len)){
 		//In this case we can do the far faster version of the delta encoding function
 		short lastVal = input[0];
 		output[0] = lastVal;
@@ -62,15 +62,15 @@ extern void encodeWaveform(short *input, short *output, int input_len, int * fil
 		}
 	}
 	else{
-		short out;
-		for(int i = 0; i < input_len; i++){
-			out = input[i] * filt[0];
-			for(int j = 1; j < filt_len; j++){
-				if ((i - j)>=0)
-					out += input[i-j]*filt[j];
-			output[i] = out;	
-			}
+	    short out;
+	    for(int i = 0; i < input_len; i++){
+		out = input[i] * filt[0];
+		for(int j = 1; j < filt_len; j++){
+		    if ((i - j)>=0)
+		        out += input[i-j]*filt[j];
 		}
+                output[i] = out;	
+	    }
 	}
 	return;
 }
