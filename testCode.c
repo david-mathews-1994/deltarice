@@ -1,20 +1,8 @@
 /************************************************************
 
-  Use
-       h5cc h5ex_d_bzip2.c H5Zbzip2.c -lbz2 
-  command to compile this example.
-
   This example shows how to read and write data to a dataset
-  using bzip2 compression available in the H5Zbzip2.c file that
-  accompanies this example.  
-  The program first registers bzip2 compression  with the library,
-  and then checks if bzip2 compression is available.
-  After that it writes integers to a dataset using bzip2,
-  then closes the file.  Next, it reopens the file, reads
-  back the data, and outputs the type of compression and the
-  maximum value in the dataset to the screen.
-
-  This file is intended for use with HDF5 Library version 1.8
+  using the deltaRice compression routine. It tests the routines
+  stability across all possible input values of 16-bit integers.
 
  ************************************************************/
 
@@ -24,11 +12,11 @@
 
 #define FILE            "test.h5"
 #define DATASET         "test"
-#define DIM0            5
-#define DIM1            5
-#define CHUNK0          5 
+#define DIM0            65536
+#define DIM1            10
+#define CHUNK0          32768 
 #define CHUNK1          5
-#define H5Z_FILTER_DELTARICE  4020
+#define H5Z_FILTER_DELTARICE  32025
 
 int main (void){
     hid_t           file, space, dset, dcpl;    /* Handles */
@@ -40,24 +28,14 @@ int main (void){
     size_t          nelmts;
     unsigned int    flags,
                     filter_info;
-    const unsigned cd_values[2] = {8, 5};          /* bzip2 default level is 9 */
+    
+    const unsigned cd_values[2] = {8, 32768}; //first value is the M parameter, second is the length of the chunk
     short             wdata[DIM0][DIM1],          /* Write buffer */
                     rdata[DIM0][DIM1],          /* Read buffer */
                     maxr, maxw,
                     i, j;
 
-    /* 
-       Register bzip2 filter with the library
-     */
-
     status = deltarice_register_h5filter();
-    /*
-     * Check if bzip2 compression is available and can be used for both
-     * compression and decompression.  Normally we do not perform error
-     * checking in these examples for the sake of clarity, but in this
-     * case we will make an exception because this filter is an
-     * optional part of the hdf5 library.
-     */
     avail = H5Zfilter_avail(H5Z_FILTER_DELTARICE);
     if (!avail) {
         printf ("deltarice filter not available.\n");
@@ -70,18 +48,9 @@ int main (void){
         return 1;
     }
 
-    /*
-     * Initialize data and find its maximum value to check later.
-     */
     for (i=0; i<DIM0; i++)
         for (j=0; j<DIM1; j++)
-            wdata[i][j] = 0;
-    maxw = wdata[0][0];
-    for (i=0; i<DIM0; i++)
-        for (j=0; j<DIM1; j++)
-            if (maxw < wdata[i][j])
-                maxw = wdata[i][j];
-
+            wdata[i][j] = i;
     /*
      * Create a new file using the default properties.
      */
@@ -110,22 +79,15 @@ int main (void){
     /*
      * Write the data to the dataset.
      */
-    printf("pre-writing\n");
     status = H5Dwrite (dset, H5T_NATIVE_SHORT, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                 wdata[0]);
-    printf("post writing completed\n");
     /*
      * Close and release resources.
      */
     status = H5Pclose (dcpl);
-    printf("freed dcpl\n");
     status = H5Dclose (dset);
-    printf("freed dset\n");
     status = H5Sclose (space);
-    printf("freed space\n");
     status = H5Fclose (file);
-    printf("freed file\n");
-
 
     /*
      * Now we begin the read section of this example.
