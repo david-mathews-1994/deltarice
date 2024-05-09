@@ -307,6 +307,9 @@ int readWholeCompressedByteString(size_t cd_nelmts, const unsigned int* cd_value
 	if(wavelength == -1)
 		wavelength = totalNumberPoints;
 	int numWaveforms = totalNumberPoints / abs(wavelength);
+        int leftover = totalNumberPoints - wavelength * numWaveforms;
+        if(leftover != 0)
+            numWaveforms++;
 	#if defined(_OPENMP)
 	{
 		//in the case that we want to do this with openmp, this is what we do
@@ -323,8 +326,13 @@ int readWholeCompressedByteString(size_t cd_nelmts, const unsigned int* cd_value
 		int i;
 		#pragma omp parallel for
 		for(i = 0; i < numWaveforms; i++){
-			perWaveDecompression(&output[i*wavelength], &tempShortBuffer[i*wavelength], &intBuf[startLocs[i]], wavelength, filter, filterLen, M);
-		}
+                        if((i==numWaveforms-1) && leftover!=0){//in the case that it's the last one to run and it's at the end of the file, just do the leftover bits
+                		perWaveDecompression(&output[i*wavelength], &tempShortBuffer[i*wavelength], &intBuf[startLocs[i]], leftover, filter, filterLen, M);
+		        }
+                        else{
+                            perWaveDecompression(&output[i*wavelength], &tempShortBuffer[i*wavelength], &intBuf[startLocs[i]], wavelength, filter, filterLen, M);
+                        }
+                }
 		*buf = output;
 		*buf_size = totalNumberPoints * 2;
 		free(tempShortBuffer);
@@ -383,19 +391,17 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 	if(wavelength == -1){
 		wavelength = totalNumber;
 	}
-	else if(nbytes % 2 == 0){
-		if((int)(nbytes / 2) % wavelength != 0){
-			fprintf(stderr, "Wavelength doesn't divide evenly with size of dataset: %ld / %d has != remainder\n", nbytes/2, wavelength);
-			//free(filter);
-			return -1;
-		}
-	}
-	else{
+	else if(nbytes % 2 != 0){//check to make sure we have something that can properly fit within 2-byte numbers
 		fprintf(stderr, "Input Size somehow not divisible by two? %ld \n", nbytes);
 		//free(filter);
 		return -1;
-	}
+	}//otherwise the system should be good to go
 	int numWaves = totalNumber/wavelength;
+        int leftover = totalNumber - numWaves * wavelength; //if this is zero, the system divides evenly and we're fine
+        if(leftover != 0){
+            numWaves++;
+        }
+        //otherwise there is leftover and the last instance will need to deal with it
 	//check if OPENMP was used during compilation, if so do this stuff instead
 	#if defined(_OPENMP)
 	{
@@ -411,8 +417,13 @@ int writeWholeCompressedByteString(size_t cd_nelmts, const unsigned int cd_value
 		#pragma omp parallel for
 		for(i = 0; i < numWaves; i++){ //this should run in parallel now across all threads available on the PC
 			//first allocate the space
-			outputSizes[i] = perWaveCompression(&outputBuffer[i*wavelength+i+1], &inputWaveforms[i*wavelength], &tempEncodedBuffer[i*wavelength], wavelength, filter, filterLen, M);
-		}
+                        if((i==numWaves-1) && (leftover != 0)){
+                            outputSizes[i] = perWaveCompression(&outputBuffer[i*wavelength+i+1], &inputWaveforms[i*wavelength], &tempEncodedBuffer[i*wavelength], leftover, filter, filterLen, M);
+		        }
+                        else{
+                            outputSizes[i] = perWaveCompression(&outputBuffer[i*wavelength+i+1], &inputWaveforms[i*wavelength], &tempEncodedBuffer[i*wavelength], wavelength, filter, filterLen, M);
+                        }
+                }
 		size_t currloc = 1;
 		//#pragma omp parallel for ordered
 		for(int i = 0; i < numWaves; i++){
