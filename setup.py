@@ -327,9 +327,9 @@ with open("README.md") as r:
 
 # TODO hdf5 support should be an "extra". Figure out how to set this up.
 setup(
-    name="deltarice",
+    name="deltaRice",
     version=VERSION,
-    packages=["deltarice"],
+    packages=["deltaRice"],
     scripts=[],
     ext_modules=EXTENSIONS,
     cmdclass={"build_ext": build_ext, "install": install, "develop": develop},
