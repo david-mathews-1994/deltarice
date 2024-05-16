@@ -16,7 +16,7 @@ jobs:
         hdf5: ["1.10.7"]
 
     steps:
-      # Checkout bitshuffle
+      # Checkout deltarice
       - uses: actions/checkout@v3
 
       # Build wheels for linux and x86 platforms
@@ -38,9 +38,9 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           # Install different version of HDF5 for unit tests to ensure the
           # wheels are independent of HDF5 installation
-          # CIBW_BEFORE_TEST: |
-          #   chmod +x .github/workflows/install_hdf5.sh
-          #   .github/workflows/install_hdf5.sh 1.8.11
+          CIBW_BEFORE_TEST: |
+            chmod +x .github/workflows/install_hdf5.sh
+            .github/workflows/install_hdf5.sh 1.8.11
           # Run units tests but disable test_h5plugin.py
           CIBW_TEST_COMMAND: pytest {package}/tests/*.py #run the unit tests
           # The Github runners for macOS don't support AVX2 instructions and so the tests will fail with SIGILL, so skip them
