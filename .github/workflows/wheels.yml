@@ -14,6 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest] #temporary don't do macos to see if that can work, macos-latest]
         hdf5: ["1.10.7"]
+        python-version: ["3.8"] #it seems like the default python3.6 is having issues so maybe an updated version is required?
 
     steps:
       # Checkout deltarice
