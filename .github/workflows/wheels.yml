@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest] #temporary don't do macos to see if that can work, macos-latest]
         hdf5: ["1.10.7"]
 
     steps:
