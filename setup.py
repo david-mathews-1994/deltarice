@@ -18,7 +18,7 @@ import platform
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
-VERSION_POINT = 1 #very first version
+VERSION_POINT = 2 #very first version
 
 # Only unset in the 'release' branch and in tags.
 VERSION_DEV = 1
@@ -322,14 +322,14 @@ with open("requirements.txt") as f:
     requires = f.read().splitlines()
     requires = [r.split()[0] for r in requires]
 
-#with open("README.rst") as r:
- #   long_description = r.read()
+with open("README.md") as r:
+    long_description = r.read()
 
 # TODO hdf5 support should be an "extra". Figure out how to set this up.
 setup(
-    name="deltaRice",
+    name="deltarice",
     version=VERSION,
-    packages=[],
+    packages=["deltarice"],
     scripts=[],
     ext_modules=EXTENSIONS,
     cmdclass={"build_ext": build_ext, "install": install, "develop": develop},
@@ -339,11 +339,11 @@ setup(
     package_data={"": ["data/*"]},
     # metadata for upload to PyPI
     author="David Mathews",
-    author_email="dgma224@g.uky.edu",
-    description="Custom compression filter for the Nab Experiment",
-    #long_description=long_description,
+    author_email="david.mathews.1994@gmail.com",
+    description="deltarice filter for compression of 16bit digitized data",
+    long_description=long_description,
     license="MIT",
-    url="TBD",
+    url="https://github.com/david-mathews-1994/deltarice",
     #download_url=("https://gitlab.com/dgma224/deltarice" % VERSION),
     keywords=["compression", "hdf5", "numpy"],
 )
