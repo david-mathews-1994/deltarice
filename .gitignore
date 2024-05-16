@@ -33,8 +33,8 @@ ipynb_checkpoints
 *.so
 
 # Packages
-*.egg
-*.egg-info
+.egg
+.egg-info
 dist
 build
 eggs
