@@ -35,7 +35,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
             CPATH=/usr/local/include
-          CIBW_TEST_REQUIRES: python
+          #CIBW_TEST_REQUIRES: python
           # Install different version of HDF5 for unit tests to ensure the
           # wheels are independent of HDF5 installation
           # CIBW_BEFORE_TEST: |
