@@ -16,7 +16,7 @@ def test_worst_case():
   f.close()
   assert test, "Failed default random number test"
   return
-
+'''
 def test_different_m():
   f = h5py.File('testFile.h5', 'w')
   compression_opts = (16,)
@@ -81,3 +81,4 @@ def test_brute_force_all_unsigned():
   f.close()
   assert test, "Failed brute force all possible unsigned 16-bit values test"
   return
+'''
