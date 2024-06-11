@@ -329,7 +329,7 @@ with open("README.md") as r:
 setup(
     name="deltarice",
     version=VERSION,
-    packages=["deltarice"],
+    packages=[],
     scripts=[],
     ext_modules=EXTENSIONS,
     cmdclass={"build_ext": build_ext, "install": install, "develop": develop},
