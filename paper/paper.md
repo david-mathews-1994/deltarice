@@ -40,7 +40,7 @@ authors:
     affiliation: "2, 8" # (Multiple affiliations must be quoted)
     corresponding: false
   - name: H. Li
-    orcid:
+    orcid: 0000-0003-3726-9663
     affiliation: "3"
     corresponding: false
   - name: R. Mammei
