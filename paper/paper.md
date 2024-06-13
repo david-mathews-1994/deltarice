@@ -44,7 +44,7 @@ authors:
     affiliation: "3"
     corresponding: false
   - name: R. Mammei
-    orcid: 
+    orcid: 0009-0005-3481-4832
     affiliation: "9, 10" # (Multiple affiliations must be quoted)
     corresponding: false
   - name: A. Mendelsohn
