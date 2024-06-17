@@ -111,8 +111,7 @@ This algorithm is a two-step process: the digitized signal is first passed throu
 Rice coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a division by a tunable parameter $m$, and $r$, the remainder of that division. $q$ is stored in Unary coding, with $r$ in truncated binary. In this routine, signed values are handled by interleaving positive and negative values as follows: $x\prime = 2*x$ for $x>=0$ and $x\prime = 2|x|-1$ for $x<0$. Rice coding is used instead of the more general Golomb coding [@golomb] because the restriction to powers of $2$ for $m$ allows for more efficient calculations. For information about the optimization of $m$, see [Optimization](https://github.com/david-mathews-1994/deltarice/blob/master/docs/Optimization.md). In the case that $q>=8$, the output will be $q=8$ followed by the original number in 16-bit signed representation. This is done to ensure that the amount a value can fail to be compressed is fixed. The outputs from this method are packed sequentially into 32 bit containers ensuring that no bits are wasted for any containers but the last one for a dataset. Table \ref{bitpacking} shows an example of bit packing for 8 bit output packets with a 16 bit temporary storage location.
 
 
-Table 1: An example of Rice coding when writing $x=-2, 25$ with $m=8$\label{bitpacking}.
-
+Table 1: An example of Rice coding when writing $x=-2, 25$ with $m=8$ []{label="bitpacking"}
 | Bit            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
 |----------------|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Initial        | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
