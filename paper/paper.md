@@ -112,6 +112,7 @@ Rice coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a 
 
 
 Table 1: An example of Rice coding when writing $x=-2, 25$ with $m=8$ []{label="bitpacking"}
+
 | Bit            | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
 |----------------|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Initial        | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
