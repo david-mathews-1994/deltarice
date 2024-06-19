@@ -112,14 +112,14 @@ Rice coding functions by encoding a value $x$ in 2 pieces: $q$, the result of a 
 
 ![](./../docs/images/BitPackingTable.png?raw=true)
 
-*A demonstration of rice coding and bit packing when writing $x=-2$ and $x=25$ with $m=8$ for a $8$ bit output container with a 16 bit temporary cache. Any remaining data in the temporary buffer is retained for the next write of $x$, or output at the end of the compression when no more values of $x$ are provided.
+*A demonstration of rice coding and bit packing when writing $x=-2$ and $x=25$ with $m=8$ for a $8$ bit output container with a 16 bit temporary cache. Any remaining data in the temporary buffer is retained for the next write of $x$, or output at the end of the compression when no more values of $x$ are provided.*
 
 ## Preparatory Encoding
 Preparatory encoding is done to adjust the dataset to a form more optimal for Rice Coding. By default, this is done with delta encoding which stores the difference between subsequent values. The image below shows an example of this when applied to a signal from the Nab experiment. A simple optimization routine for determining the ideal filter is discussed in [Optimization](https://github.com/david-mathews-1994/deltarice/blob/master/docs/Optimization.md). 
 
 ![](./../docs/images/ExampleEncoding.png?raw=true)
 
-*Left: A waveform before and after delta encoding. Applying Rice coding with $m=8$ on the original signal expands the size of the waveform from 14 kB to 18.2 kB. The same Rice coding operation on the delta encoded waveform compresses the waveform to 4.6 kB, 33% the original size. Right: A histogram of a sample dataset before and after delta encoding. Note the clear reduction in the distribution width and that the most probable values are centered around 0*
+*Left: A waveform before and after delta encoding. Applying Rice coding with $m=8$ on the original signal expands the size of the waveform from 14 kB to 18.2 kB. The same Rice coding operation on the delta encoded waveform compresses the waveform to 4.6 kB, 33% the original size. Right: A histogram of a sample dataset before and after delta encoding. Note the clear reduction in the distribution width and that the most probable values are centered around 0.*
 
 # Implementation
 
