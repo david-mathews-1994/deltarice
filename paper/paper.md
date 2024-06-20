@@ -66,29 +66,29 @@ authors:
   
   
 affiliations:
- - name: Oak Ridge National Laboratory
+ - name: Oak Ridge National Laboratory, Oak Ridge, TN, USA
    index: 1
- - name: University of Kentucky
+ - name: Department of Physics and Astronomy, University of Kentucky, Lexington, KY, USA
    index: 2
- - name: University of Virginia
+ - name: Department of Physics, University of Virginia, Charlottesvile, VA, USA
    index: 3
- - name: University of Tennessee
+ - name: Department of Physics, University of Tennessee, Knoxville, TN, USA
    index: 4
- - name: North Carolina State University
+ - name: Department of Physics, North Carolina State University, Raleigh, NC, USA
    index: 5
- - name: Triangle Universities Nuclear Laboratory
+ - name: Triangle Universities Nuclear Laboratory, Durham, NC, USA
    index: 6
- - name: Normandie University
+ - name: Normandie University, Rouen, France
    index: 7
- - name: Georgia Institute of Technology
+ - name: Georgia Institute of Technology, Atlanta, GA, USA
    index: 8
- - name: University of Manitoba
+ - name: University of Manitoba, Winnipeg, CA
    index: 9
- - name: University of Winnipeg
+ - name: University of Winnipeg, Winnipeg, CA
    index: 10
- - name: Arizona State University
+ - name: Arizona State University, Tempe, AZ, USA
    index: 11
- - name: Los Alamos National Laboratory
+ - name: Los Alamos National Laboratory, Los Alamos, NM, USA
    index: 12
  
    
